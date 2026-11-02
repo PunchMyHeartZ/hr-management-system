@@ -1,0 +1,177 @@
+{
+  "app": {
+    "title": "HR Management System",
+    "subtitle": "Employee & Leave Management"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "employees": "Employees",
+    "leaves": "Leave Requests",
+    "attendance": "Attendance",
+    "payroll": "Payroll",
+    "executive": "Executive Reports"
+  },
+  "executive": {
+    "title": "Executive Reports",
+    "subtitle": "Confidential workforce cost insights",
+    "monthlyCost": "Workforce Cost (latest)",
+    "annualEstimate": "Annual Cost Estimate",
+    "avgSalary": "Average Salary (active)",
+    "activeEmployees": "Active Employees",
+    "avgByDepartment": "Average Salary by Department",
+    "topEarners": "Top 5 Earners",
+    "rank": "Rank",
+    "confidential": "Executives only",
+    "noPayroll": "No payroll data yet"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of workforce, leave and payroll",
+    "kpi": {
+      "employees": "Total Employees",
+      "active": "active",
+      "pendingLeaves": "Pending Leave Requests",
+      "payable": "Payroll to Pay",
+      "otHours": "OT Hours"
+    },
+    "leavesByMonth": "Monthly Leave Statistics",
+    "leavesByType": "Leave by Type",
+    "payrollByMonth": "Monthly Payroll",
+    "payrollByDepartment": "Payroll by Department (latest month)",
+    "days": "days",
+    "requests": "requests"
+  },
+  "common": {
+    "add": "Add",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "actions": "Actions",
+    "status": "Status",
+    "error": "Something went wrong",
+    "noData": "No data available"
+  },
+  "employees": {
+    "title": "Employees",
+    "subtitle": "Manage your organization's employees",
+    "addEmployee": "Add Employee",
+    "newEmployee": "New Employee",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "position": "Position",
+    "department": "Department",
+    "selectDepartment": "Select a department",
+    "hireDate": "Hire Date",
+    "salary": "Salary",
+    "search": "Search name / email / position",
+    "allDepartments": "All departments",
+    "edit": "Edit",
+    "editEmployee": "Edit Employee",
+    "leaveQuota": "Annual Leave Quota (days)",
+    "leaveRemaining": "Leave Remaining",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "position": "Position",
+      "department": "Department",
+      "hireDate": "Hire Date",
+      "salary": "Salary",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "terminated": "Terminated"
+    }
+  },
+  "leaves": {
+    "title": "Leave Requests",
+    "subtitle": "Track and manage employee leave",
+    "requestLeave": "Request Leave",
+    "newRequest": "New Leave Request",
+    "employee": "Employee",
+    "selectEmployee": "Select an employee",
+    "leaveType": "Leave Type",
+    "selectType": "Select a type",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "reason": "Reason",
+    "reasonPlaceholder": "Optional reason...",
+    "days": "Days",
+    "approve": "Approve",
+    "reject": "Reject",
+    "types": {
+      "annual": "Annual Leave",
+      "sick": "Sick Leave",
+      "personal": "Personal Leave",
+      "unpaid": "Unpaid Leave"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
+  },
+  "attendance": {
+    "title": "Attendance",
+    "subtitle": "Clock in / clock out and overtime",
+    "clockIn": "Clock In",
+    "clockOut": "Clock Out",
+    "date": "Date",
+    "checkIn": "Check In",
+    "checkOut": "Check Out",
+    "hours": "Hours",
+    "otHours": "OT (hrs)",
+    "clockedIn": "Clocked in",
+    "clockedOut": "Clocked out"
+  },
+  "payroll": {
+    "title": "Payroll",
+    "subtitle": "Monthly salary, social security, tax and net pay",
+    "generate": "Calculate Payroll",
+    "month": "Month",
+    "baseSalary": "Base Salary",
+    "otPay": "OT Pay",
+    "bonus": "Annual Bonus",
+    "sso": "Social Security",
+    "tax": "Withholding Tax",
+    "netPay": "Net Pay",
+    "total": "Total",
+    "note": "Estimate: SSO 5% (max 750 THB/month), tax per Thai progressive brackets, OT = hourly rate (salary/30/8) x 1.5, hours beyond 8/day after 1h lunch break. Bonus is taxed at the employee's marginal rate in the month it is paid",
+    "generated": "Payroll calculated",
+    "exportCsv": "Export CSV"
+  },
+  "auth": {
+    "loginTitle": "Sign In",
+    "loginSubtitle": "HR Management System",
+    "registerTitle": "Create Account",
+    "registerSubtitle": "Register to get started",
+    "username": "Username",
+    "password": "Password",
+    "fullName": "Full Name",
+    "role": "Access Level",
+    "roles": {
+      "hr": "HR Staff",
+      "executive": "Executive"
+    },
+    "login": "Sign In",
+    "register": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "demoAccounts": "Demo accounts",
+    "logout": "Sign Out",
+    "viewOnly": "View only",
+    "heroTitle": "People management, made simple",
+    "heroSubtitle": "All-in-one HR — employees, leave, attendance and payroll in one place, with real-time executive reports.",
+    "hero": {
+      "employees": "Complete employee directory",
+      "leave": "Approve leave requests in one click",
+      "payroll": "Automatic payroll and OT calculation"
+    }
+  }
+}

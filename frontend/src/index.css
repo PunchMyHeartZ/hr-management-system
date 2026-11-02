@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-azure-50: #F0F6FE;
+  --color-azure-100: #DCEBFD;
+  --color-azure-200: #C0DBFB;
+  --color-azure-300: #93C1F8;
+  --color-azure-400: #5FA1F1;
+  --color-azure-500: #2F7BE8;
+  --color-azure-600: #0B57D0;
+  --color-azure-700: #0A4AB8;
+  --color-azure-800: #0C3E96;
+  --color-azure-900: #0E3575;
+}
+
+body {
+  font-family:
+    'Inter',
+    'Noto Sans Thai',
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    'Sukhumvit Set',
+    'Leelawadee UI',
+    Tahoma,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-azure-200) 75%, white);
+  color: var(--color-azure-900);
+}
+
+/* Dialog animations */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translate(-50%, -47%) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes dialog-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -49%) scale(0.97); }
+}
+
+.dialog-overlay[data-state='open'] { animation: overlay-in 0.18s ease-out; }
+.dialog-overlay[data-state='closed'] { animation: overlay-out 0.15s ease-in; }
+.dialog-content[data-state='open'] { animation: dialog-in 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+.dialog-content[data-state='closed'] { animation: dialog-out 0.15s ease-in; }
+
+/* Radix Select dropdown animation */
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.select-content[data-state='open'] { animation: dropdown-in 0.15s ease-out; }

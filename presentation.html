@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HR Management System — Presentation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Segoe UI', 'Noto Sans Thai', 'Leelawadee UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #fdf2f8 100%);
+    color: #1e293b;
+  }
+  #deck { height: 100vh; }
+  .slide {
+    display: none;
+    height: 100vh;
+    flex-direction: column;
+    justify-content: center;
+    padding: 5vh 8vw;
+    animation: fadein .35s ease-out;
+  }
+  .slide.active { display: flex; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .kicker {
+    display: inline-block; width: fit-content;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed);
+    color: #fff; font-size: clamp(11px, 1.2vw, 14px); font-weight: 600;
+    padding: 4px 14px; border-radius: 999px; letter-spacing: .5px; margin-bottom: 16px;
+  }
+  h1 { font-size: clamp(30px, 4.5vw, 56px); font-weight: 800; line-height: 1.15; color: #0f172a; }
+  h1 .grad { background: linear-gradient(90deg, #4f46e5, #9333ea); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  h2 { font-size: clamp(22px, 3vw, 36px); font-weight: 800; margin-bottom: 6px; color: #0f172a; }
+  .sub { color: #64748b; font-size: clamp(13px, 1.4vw, 17px); margin-bottom: 28px; }
+  .grid { display: grid; gap: 14px; }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .card {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+    padding: 16px 18px; box-shadow: 0 4px 14px rgba(79, 70, 229, .06);
+  }
+  .card b { display: block; font-size: clamp(13px, 1.3vw, 16px); margin-bottom: 4px; color: #0f172a; }
+  .card span { font-size: clamp(11px, 1.15vw, 13.5px); color: #64748b; line-height: 1.5; }
+  .chip {
+    display: inline-block; font-size: clamp(10px, 1vw, 12px); font-weight: 700;
+    padding: 3px 10px; border-radius: 999px; margin: 2px 2px;
+    background: #eef2ff; color: #4338ca;
+  }
+  .chip.green { background: #dcfce7; color: #15803d; }
+  .chip.amber { background: #fef3c7; color: #b45309; }
+  .chip.rose  { background: #ffe4e6; color: #be123c; }
+
+  /* ER boxes */
+  .er { display: flex; gap: 22px; align-items: stretch; flex-wrap: wrap; }
+  .entity { background: #fff; border: 2px solid #4f46e5; border-radius: 14px; overflow: hidden; min-width: 230px; flex: 1; box-shadow: 0 6px 18px rgba(79,70,229,.10); }
+  .entity h4 { background: linear-gradient(90deg, #4f46e5, #7c3aed); color: #fff; padding: 8px 14px; font-size: clamp(12px,1.2vw,15px); }
+  .entity ul { list-style: none; padding: 8px 14px 12px; }
+  .entity li { font-size: clamp(10px, 1.05vw, 13px); padding: 2.5px 0; color: #334155; border-bottom: 1px dashed #eef2f7; }
+  .entity li:last-child { border-bottom: none; }
+  .pk { color: #b45309; font-weight: 700; }
+  .fk { color: #15803d; font-weight: 600; }
+  .rel { align-self: center; font-weight: 700; color: #6d28d9; font-size: clamp(14px,1.6vw,20px); white-space: nowrap; }
+
+  table.tbl { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgba(79,70,229,.06); font-size: clamp(10.5px, 1.05vw, 13.5px); }
+  table.tbl th { background: #eef2ff; color: #3730a3; text-align: left; padding: 8px 12px; font-size: clamp(10px,1vw,12.5px); text-transform: uppercase; letter-spacing: .4px; }
+  table.tbl td { padding: 7px 12px; border-top: 1px solid #f1f5f9; color: #334155; }
+  code, pre { font-family: Consolas, 'Courier New', monospace; }
+  code.inline { background: #eef2ff; color: #4338ca; padding: 1px 7px; border-radius: 6px; font-size: .92em; }
+  pre.sql {
+    background: #0f172a; color: #e2e8f0; border-radius: 14px; padding: 18px 22px;
+    font-size: clamp(10.5px, 1.15vw, 14px); line-height: 1.65; overflow: auto;
+    box-shadow: 0 10px 24px rgba(15,23,42,.25);
+  }
+  pre.sql .k { color: #c084fc; font-weight: 700; }
+  pre.sql .t { color: #7dd3fc; }
+  pre.sql .c { color: #64748b; }
+
+  .flow { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .flow .node { background: #fff; border: 2px solid; border-radius: 16px; padding: 14px 20px; text-align: center; min-width: 200px; }
+  .flow .arrow { font-size: 26px; font-weight: 800; color: #818cf8; }
+  .flow small { color: #64748b; display: block; margin-top: 4px; }
+
+  .note { margin-top: 22px; font-size: clamp(10.5px, 1.1vw, 13px); color: #94a3b8; }
+
+  .hud { position: fixed; bottom: 18px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 10; }
+  .hud button {
+    background: #fff; border: 1px solid #e2e8f0; color: #475569;
+    width: 36px; height: 36px; border-radius: 999px; font-size: 16px; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15,23,42,.08);
+  }
+  .hud button:hover { background: #eef2ff; color: #4f46e5; }
+  .dots { display: flex; gap: 6px; }
+  .dots i { width: 8px; height: 8px; border-radius: 999px; background: #c7d2fe; cursor: pointer; transition: .2s; }
+  .dots i.on { background: #4f46e5; width: 22px; }
+  #counter { font-size: 12px; color: #94a3b8; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="deck">
+
+  <!-- 1 : TITLE -->
+  <section class="slide">
+    <span class="kicker">PROJECT PRESENTATION</span>
+    <h1>ระบบบริหารทรัพยากรบุคคล<br /><span class="grad">HR Management System</span></h1>
+    <p class="sub" style="margin-top:18px">ระบบ HR ครบวงจร — พนักงาน • การลา • เวลาทำงาน/OT • เงินเดือน/ประกันสังคม/ภาษี • สิทธิ์การใช้งาน 2 ระดับ • รองรับ 2 ภาษา (ไทย/English)</p>
+    <div>
+      <span class="chip">Vite + React</span><span class="chip">Tailwind CSS</span><span class="chip">Radix UI</span>
+      <span class="chip green">Node.js + Express</span><span class="chip green">JWT + bcrypt</span>
+      <span class="chip amber">PostgreSQL 18</span><span class="chip amber">pgAdmin</span>
+      <span class="chip rose">i18next</span><span class="chip rose">Recharts</span>
+    </div>
+    <p class="note">กด ← → หรือ Space เพื่อเปลี่ยนสไลด์</p>
+  </section>
+
+  <!-- 2 : FEATURES -->
+  <section class="slide">
+    <span class="kicker">OVERVIEW</span>
+    <h2>ฟีเจอร์หลักของระบบ</h2>
+    <p class="sub">พัฒนาครบทั้ง Frontend, Backend และ Database</p>
+    <div class="grid g3">
+      <div class="card"><b>จัดการพนักงาน</b><span>เพิ่ม / แก้ไข / ค้นหา / กรองแผนก • สถานะการทำงาน • สิทธิ์วันลาคงเหลือ</span></div>
+      <div class="card"><b>การลา (Leave)</b><span>ยื่นใบลา 4 ประเภท • อนุมัติ/ไม่อนุมัติ • นับวันอัตโนมัติ</span></div>
+      <div class="card"><b>เวลาทำงาน + OT</b><span>บันทึกเข้า-ออกงาน • คิด OT อัตโนมัติ (เกิน 8 ชม. หักพักเที่ยง 1 ชม.)</span></div>
+      <div class="card"><b>Payroll Engine</b><span>ประกันสังคม 5% (สูงสุด 750) • ภาษีขั้นบันได • โบนัสหักภาษีอัตราขั้นสูง • ส่งออก CSV</span></div>
+      <div class="card"><b>สิทธิ์การใช้งาน</b><span>ระบบสมาชิก + Login (JWT) • ระดับ HR และผู้บริหาร • รายงานลับเฉพาะผู้บริหาร</span></div>
+      <div class="card"><b>Dashboard + กราฟ</b><span>KPI ภาพรวม • กราฟการลา / เงินจ่ายรายเดือน / แยกแผนก • ไทย-อังกฤษ</span></div>
+    </div>
+  </section>
+
+  <!-- 3 : ARCHITECTURE -->
+  <section class="slide">
+    <span class="kicker">ARCHITECTURE</span>
+    <h2>สถาปัตยกรรมระบบ</h2>
+    <p class="sub">3-Tier Architecture — แยกชั้นชัดเจน</p>
+    <div class="flow">
+      <div class="node" style="border-color:#6366f1">
+        <b>Frontend</b><small>Vite + React 18</small>
+        <small>Tailwind CSS v4 • Radix UI</small>
+        <small>i18next (TH/EN) • Recharts</small>
+      </div>
+      <div class="arrow">⇄</div>
+      <div class="node" style="border-color:#10b981">
+        <b>Backend REST API</b><small>Node.js + Express</small>
+        <small>JWT Auth Middleware</small>
+        <small>Role-based Access (HR/Exec)</small>
+      </div>
+      <div class="arrow">⇄</div>
+      <div class="node" style="border-color:#f59e0b">
+        <b>PostgreSQL 18</b><small>7 Tables + Constraints</small>
+        <small>pg (node-postgres) Pool</small>
+        <small>จัดการผ่าน pgAdmin</small>
+      </div>
+    </div>
+    <div class="grid g3" style="margin-top:26px">
+      <div class="card"><b>การสื่อสาร</b><span>REST API (JSON) ผ่าน fetch + Bearer Token</span></div>
+      <div class="card"><b>ความปลอดภัย</b><span>bcrypt hash รหัสผ่าน + JWT หมดอายุ 7 วัน</span></div>
+      <div class="card"><b>ธุรกรรม</b><span>คำนวณ Payroll ทั้งเดือนด้วย Transaction (BEGIN/COMMIT)</span></div>
+    </div>
+  </section>
+
+  <!-- 4 : ER CORE -->
+  <section class="slide">
+    <span class="kicker">ENTITY DESIGN 1/2</span>
+    <h2>เอนทิตี้หลัก — ข้อมูลองค์กรและการลา</h2>
+    <p class="sub">ความสัมพันธ์แบบ One-to-Many (1 ──∞)</p>
+    <div class="er">
+      <div class="entity">
+        <h4>departments</h4>
+        <ul>
+          <li><span class="pk">PK</span> department_id SERIAL</li>
+          <li>department_name VARCHAR UNIQUE</li>
+          <li>department_code VARCHAR UNIQUE</li>
+        </ul>
+      </div>
+      <div class="rel">1 ──∞</div>
+      <div class="entity">
+        <h4>employees</h4>
+        <ul>
+          <li><span class="pk">PK</span> employee_id SERIAL</li>
+          <li>first/last_name, email UNIQUE</li>
+          <li>position, phone, hire_date</li>
+          <li><span class="fk">FK</span> department_id → departments</li>
+          <li>salary NUMERIC(12,2) ≥ 0</li>
+          <li>status CHECK (active/inactive/terminated)</li>
+          <li>annual_leave_quota INT</li>
+        </ul>
+      </div>
+      <div class="rel">1 ──∞</div>
+      <div class="entity">
+        <h4>leave_requests</h4>
+        <ul>
+          <li><span class="pk">PK</span> leave_id SERIAL</li>
+          <li><span class="fk">FK</span> employee_id → employees</li>
+          <li>leave_type CHECK (annual/sick/personal/unpaid)</li>
+          <li>start_date, end_date (CHECK end ≥ start)</li>
+          <li>status CHECK (pending/approved/rejected)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">FK แผนกใช้ ON DELETE RESTRICT (กันลบแผนกที่มีคน) • FK พนักงานใช้ ON DELETE CASCADE (ลบคนแล้วข้อมูลย่อยหายตาม)</p>
+  </section>
+
+  <!-- 5 : ER PAYROLL + USERS -->
+  <section class="slide">
+    <span class="kicker">ENTITY DESIGN 2/2</span>
+    <h2>เอนทิตี้เงินเดือนและผู้ใช้งาน</h2>
+    <p class="sub">ทุกตารางผูกกับ employees ด้วย FK (CASCADE)</p>
+    <div class="er">
+      <div class="entity">
+        <h4>attendance</h4>
+        <ul>
+          <li><span class="pk">PK</span> attendance_id</li>
+          <li><span class="fk">FK</span> employee_id</li>
+          <li>work_date, check_in, check_out</li>
+          <li>ot_hours NUMERIC(5,2)</li>
+          <li>UNIQUE (employee_id, work_date)</li>
+        </ul>
+      </div>
+      <div class="entity">
+        <h4>bonuses</h4>
+        <ul>
+          <li><span class="pk">PK</span> bonus_id</li>
+          <li><span class="fk">FK</span> employee_id</li>
+          <li>bonus_year INT, amount ≥ 0</li>
+          <li>UNIQUE (employee_id, bonus_year)</li>
+        </ul>
+      </div>
+      <div class="entity">
+        <h4>payroll_records</h4>
+        <ul>
+          <li><span class="pk">PK</span> payroll_id</li>
+          <li><span class="fk">FK</span> employee_id</li>
+          <li>pay_period (year, month)</li>
+          <li>base_salary, ot_hours, ot_pay</li>
+          <li>bonus, sso, tax, net_pay</li>
+          <li>UNIQUE (employee_id, ปี, เดือน)</li>
+        </ul>
+      </div>
+      <div class="entity">
+        <h4>users</h4>
+        <ul>
+          <li><span class="pk">PK</span> user_id</li>
+          <li>username / email UNIQUE</li>
+          <li>password_hash (bcrypt)</li>
+          <li>role CHECK (hr / executive)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 : DDL -->
+  <section class="slide">
+    <span class="kicker">DDL — pgAdmin</span>
+    <h2>สร้างตารางด้วย DDL Script</h2>
+    <p class="sub">รันผ่าน pgAdmin Query Tool — 4 ไฟล์ตามลำดับการพัฒนา (Migrations)</p>
+    <pre.sql><span class="c">-- ตัวอย่างจาก schema.sql (ตาราง employees)</span>
+<span class="k">CREATE TABLE</span> <span class="t">employees</span> (
+    employee_id    <span class="k">SERIAL PRIMARY KEY</span>,
+    first_name     <span class="k">VARCHAR</span>(100)  <span class="k">NOT NULL</span>,
+    email          <span class="k">VARCHAR</span>(255)  <span class="k">NOT NULL UNIQUE</span>,
+    department_id  <span class="k">INT NOT NULL REFERENCES</span> <span class="t">departments</span>(department_id)
+                   <span class="k">ON DELETE RESTRICT</span>,
+    salary         <span class="k">NUMERIC</span>(12,2) <span class="k">NOT NULL CHECK</span> (salary &gt;= 0),
+    status         <span class="k">VARCHAR</span>(20) <span class="k">DEFAULT</span> 'active'
+                   <span class="k">CHECK</span> (status <span class="k">IN</span> ('active','inactive','terminated')),
+    annual_leave_quota <span class="k">INT NOT NULL DEFAULT</span> 10
+);
+<span class="k">CREATE INDEX</span> idx_employees_department <span class="k">ON</span> <span class="t">employees</span>(department_id);</pre>
+    <div class="grid g4" style="margin-top:18px">
+      <div class="card"><b>schema.sql</b><span>departments, employees, leave_requests</span></div>
+      <div class="card"><b>migration_payroll.sql</b><span>attendance, bonuses, payroll_records</span></div>
+      <div class="card"><b>migration_auth.sql</b><span>users + บัญชีทดลอง (bcrypt)</span></div>
+      <div class="card"><b>migration_v2.sql</b><span>คอลัมน์สิทธิ์วันลา</span></div>
+    </div>
+  </section>
+
+  <!-- 7 : API -->
+  <section class="slide">
+    <span class="kicker">BACKEND</span>
+    <h2>REST API Endpoints</h2>
+    <p class="sub">ทุก endpoint ตรวจสิทธิ์ด้วย JWT • การแก้ไขข้อมูลต้องเป็น HR หรือผู้บริหาร</p>
+    <table class="tbl">
+      <tr><th>Method</th><th>Endpoint</th><th>รายละเอียด</th><th>สิทธิ์</th></tr>
+      <tr><td>POST</td><td>/api/auth/register · /login · GET /me</td><td>สมัครสมาชิก / เข้าสู่ระบบ (JWT) / ข้อมูลปัจจุบัน</td><td>Public</td></tr>
+      <tr><td>GET POST PUT</td><td>/api/employees</td><td>รายชื่อ (JOIN ชื่อแผนก) / เพิ่ม / แก้ไข</td><td>ดู: ทุกคน · แก้: HR+Exec</td></tr>
+      <tr><td>GET POST PATCH</td><td>/api/leaves</td><td>ใบลา / ยื่นใหม่ / อนุมัติ-ไม่อนุมัติ</td><td>ดู: ทุกคน · อนุมัติ: HR+Exec</td></tr>
+      <tr><td>GET POST</td><td>/api/attendance/check-in · /check-out</td><td>บันทึกเวลา + คิด OT อัตโนมัติ</td><td>HR+Exec</td></tr>
+      <tr><td>GET POST PUT</td><td>/api/payroll · /generate · /bonus</td><td>Payslip / คำนวณทั้งเดือน (Transaction) / ตั้งโบนัส</td><td>ดู: ทุกคน · คำนวณ: HR+Exec</td></tr>
+      <tr><td>GET</td><td>/api/stats/dashboard · /executive</td><td>ข้อมูลกราฟ / รายงานลับผู้บริหาร</td><td>Dashboard: ทุกคน · Executive: <b>ผู้บริหารเท่านั้น</b></td></tr>
+    </table>
+  </section>
+
+  <!-- 8 : SECURITY -->
+  <section class="slide">
+    <span class="kicker">SECURITY & ROLES</span>
+    <h2>ระบบสมาชิก + การจำกัดสิทธิ์</h2>
+    <p class="sub">JWT + bcrypt + Role-based Access Control</p>
+    <div class="flow">
+      <div class="node" style="border-color:#6366f1"><b>Login / Register</b><small>รหัสผ่านเข้ารหัสด้วย bcrypt (10 rounds)</small></div>
+      <div class="arrow">→</div>
+      <div class="node" style="border-color:#8b5cf6"><b>JWT Token</b><small>Payload: id + role • หมดอายุ 7 วัน</small></div>
+      <div class="arrow">→</div>
+      <div class="node" style="border-color:#10b981"><b>Middleware</b><small>requireAuth (401) + requireRole (403)</small></div>
+    </div>
+    <div class="grid g2" style="margin-top:24px">
+      <div class="card">
+        <b><span class="chip">HR</span> ฝ่ายบุคคล</b>
+        <span>จัดการข้อมูลได้ทุกอย่าง — พนักงาน ใบลา เวลาทำงาน เงินเดือน โบนัส</span>
+      </div>
+      <div class="card">
+        <b><span class="chip amber">EXECUTIVE</span> ผู้บริหาร</b>
+        <span>ใช้งานได้ทุกอย่างเช่นกัน + <b>รายงานลับเฉพาะผู้บริหาร</b> (Top 5 เงินเดือน, ต้นทุนรายแผนก) — HR เรียก API นี้จะได้ 403</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 : PAYROLL -->
+  <section class="section slide">
+    <span class="kicker">PAYROLL ENGINE</span>
+    <h2>สูตรคำนวณเงินเดือน (โดยประมาณ)</h2>
+    <p class="sub">อ้างอิงหลักเกณฑ์ไทย — อยู่ใน backend/src/payroll.js</p>
+    <div class="grid g2">
+      <div class="card"><b>ค่าล่วงเวลา (OT)</b><span>OT = ชม.OT × (เงินเดือน ÷ 30 ÷ 8) × 1.5<br />ชม.OT = ชั่วโมงทำงาน − 8 (หักพักเที่ยง 1 ชม.)</span></div>
+      <div class="card"><b>ประกันสังคม (SSO)</b><span>SSO = min(เงินเดือน × 5%, 750 บาท/เดือน)</span></div>
+      <div class="card"><b>ภาษีหัก ณ ที่จ่าย</b><span>ขั้นบันได 0–35% จากรายได้ต่อปี<br />หัก: ค่าใช้จ่าย 50% (สูงสุดแสน) • ค่าลดหย่อน 60,000 • SSO</span></div>
+      <div class="card"><b>ภาษีโบนัส</b><span>หักครั้งเดียวเดือนที่จ่าย ที่อัตราขั้นสูง (marginal rate) ของพนักงาน</span></div>
+    </div>
+    <pre sql="" class="sql" style="margin-top:18px">เงินสุทธิ = (เงินเดือน + ค่า OT + โบนัส) − ประกันสังคม − ภาษีหัก ณ ที่จ่าย</pre>
+  </section>
+
+  <!-- 10 : UI -->
+  <section class="slide">
+    <span class="kicker">FRONTEND UI/UX</span>
+    <h2>หน้าตาและประสบการณ์ใช้งาน</h2>
+    <p class="sub">Modern UI — ใช้งานได้ทั้งเดสก์ท็อปและมือถือ</p>
+    <div class="grid g3">
+      <div class="card"><b>รองรับ 2 ภาษา</b><span>สลับ ไทย/English ทันทีทุกหน้า (i18next) • วันที่/เงินปรับตาม locale</span></div>
+      <div class="card"><b>Dashboard + กราฟ</b><span>KPI Cards • Bar/Pie/Stacked Chart (Recharts) • รายงานผู้บริหาร</span></div>
+      <div class="card"><b>Radix UI Components</b><span>Dialog (เพิ่ม/แก้ไขพนักงาน) • Select • Tabs — เข้าถึงได้ (a11y)</span></div>
+      <div class="card"><b>Skeleton Loading</b><span>โหลดข้อมูลแบบ skeleton ไม่กระโดด layout</span></div>
+      <div class="card"><b>ปุ่มกันกดซ้ำ</b><span>ทุกปุ่ม async มี spinner + ล็อกขณะประมวลผล</span></div>
+      <div class="card"><b>อื่นๆ</b><span>รูปโปรไฟล์ mock-up อัตโนมัติ • ส่งออก CSV (รองรับภาษาไทยใน Excel) • Glassmorphism Sidebar</span></div>
+    </div>
+  </section>
+
+  <!-- 11 : SUMMARY -->
+  <section class="slide">
+    <span class="kicker">SUMMARY & DEMO</span>
+    <h2>สรุป & วิธีเปิดระบบสาธิต</h2>
+    <div class="grid g2">
+      <div class="card">
+        <b>สิ่งที่ทำได้จากโปรเจกต์นี้</b>
+        <span>
+          ✓ ออกแบบ ER Diagram 7 เอนทิตี้ + DDL ใน pgAdmin<br />
+          ✓ REST API ครบ + ระบบสมาชิก JWT + สิทธิ์ 2 ระดับ<br />
+          ✓ Payroll Engine (SSO/ภาษี/OT/โบนัส)<br />
+          ✓ Frontend React 2 ภาษา + กราฟ + UI สวยทันสมัย<br />
+          ✓ ทดสอบจริงทั้งระบบ (401/403/Transaction/CASCADE)
+        </span>
+      </div>
+      <div class="card">
+        <b>บัญชีทดลอง</b>
+        <span>
+          HR — <code class="inline">hr@company.com / hr12345</code><br />
+          ผู้บริหาร — <code class="inline">exec@company.com / exec12345</code>
+        </span>
+        <b style="margin-top:14px">คำสั่งรัน</b>
+        <span>
+          <code class="inline">cd backend && npm run dev</code> (port 5000)<br />
+          <code class="inline">cd frontend && npm run dev</code> (port 5173)
+        </span>
+      </div>
+    </div>
+    <p class="note">ขอบคุณครับ/ค่ะ — เปิดสไลด์เต็มจอกด F11 • กด P ถ้าต้องการโหมดพิมพ์เป็น PDF</p>
+  </section>
+</div>
+
+<div class="hud">
+  <button id="prev" aria-label="prev">‹</button>
+  <div class="dots" id="dots"></div>
+  <button id="next" aria-label="next">›</button>
+  <span id="counter"></span>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.getElementById('dots');
+  let cur = 0;
+  slides.forEach((_, i) => {
+    const d = document.createElement('i');
+    d.onclick = () => go(i);
+    dots.appendChild(d);
+  });
+  function go(n) {
+    cur = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+    [...dots.children].forEach((d, i) => d.classList.toggle('on', i === cur));
+    document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+  }
+  document.getElementById('prev').onclick = () => go(cur - 1);
+  document.getElementById('next').onclick = () => go(cur + 1);
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(slides.length - 1);
+    if (e.key.toLowerCase() === 'p') print();
+  });
+  go(0);
+</script>
+</body>
+</html>
