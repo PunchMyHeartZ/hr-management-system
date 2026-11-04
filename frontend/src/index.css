@@ -34,7 +34,28 @@ body {
   color: var(--color-azure-900);
 }
 
-/* Dialog animations */
+html {
+  scroll-behavior: smooth;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+[role='tab']:focus-visible,
+[role='combobox']:focus-visible {
+  outline: 2px solid var(--color-azure-400);
+  outline-offset: 2px;
+}
+
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+/* ---------- Keyframes ---------- */
+
 @keyframes overlay-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -51,15 +72,74 @@ body {
   from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   to { opacity: 0; transform: translate(-50%, -49%) scale(0.97); }
 }
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes dropdown-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-3px) scale(0.98); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- Dialog ---------- */
 
 .dialog-overlay[data-state='open'] { animation: overlay-in 0.18s ease-out; }
 .dialog-overlay[data-state='closed'] { animation: overlay-out 0.15s ease-in; }
 .dialog-content[data-state='open'] { animation: dialog-in 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
 .dialog-content[data-state='closed'] { animation: dialog-out 0.15s ease-in; }
 
-/* Radix Select dropdown animation */
-@keyframes dropdown-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ---------- Radix Select dropdown ---------- */
+
+.select-content[data-state='open'] { animation: dropdown-in 0.16s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top; }
+.select-content[data-state='closed'] { animation: dropdown-out 0.12s ease-in; transform-origin: top; }
+
+/* ---------- Tab page transitions ---------- */
+
+[role='tabpanel'][data-state='active'] {
+  animation: fade-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.select-content[data-state='open'] { animation: dropdown-in 0.15s ease-out; }
+
+/* ---------- Motion utilities ---------- */
+
+.fade-up { animation: fade-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.banner-in { animation: fade-up 0.25s ease-out both; }
+
+.panel-in { animation: panel-in 0.16s cubic-bezier(0.16, 1, 0.3, 1); transform-origin: top right; }
+
+.card-lift { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -14px rgb(15 23 42 / 0.18);
+}
+
+/* ---------- Print (payslip) ---------- */
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

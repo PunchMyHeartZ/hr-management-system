@@ -9,7 +9,14 @@
     "leaves": "Leave Requests",
     "attendance": "Attendance",
     "payroll": "Payroll",
-    "executive": "Executive Reports"
+    "executive": "Executive Reports",
+    "calendar": "Leave Calendar",
+    "departments": "Departments",
+    "reviews": "Performance",
+    "recruitment": "Recruitment",
+    "myProfile": "My Profile",
+    "myLeaves": "My Leaves",
+    "myPayslips": "My Payslips"
   },
   "executive": {
     "title": "Executive Reports",
@@ -157,7 +164,8 @@
     "role": "Access Level",
     "roles": {
       "hr": "HR Staff",
-      "executive": "Executive"
+      "executive": "Executive",
+      "employee": "Employee"
     },
     "login": "Sign In",
     "register": "Sign Up",
@@ -173,5 +181,140 @@
       "leave": "Approve leave requests in one click",
       "payroll": "Automatic payroll and OT calculation"
     }
+  },
+  "profile": {
+    "title": "Employee Profile",
+    "subtitle": "Personal info, leave history, attendance and payslips",
+    "backToList": "Back to employees",
+    "info": "Information",
+    "hireDate": "Hire Date",
+    "annualSalary": "Annual Salary",
+    "leaveBalance": "Leave Balance",
+    "quota": "Quota",
+    "used": "Used",
+    "remaining": "Remaining",
+    "createLogin": "Create Login",
+    "createLoginTitle": "Create employee login",
+    "createLoginDesc": "The employee will be able to sign in and view their own profile, leaves and payslips",
+    "accountExists": "Login already created",
+    "tabLeaves": "Leave History",
+    "tabAttendance": "Attendance",
+    "tabPayroll": "Payroll History",
+    "tabReviews": "Reviews",
+    "viewPayslip": "View payslip"
+  },
+  "payslip": {
+    "title": "Payslip",
+    "period": "Pay Period",
+    "employee": "Employee",
+    "position": "Position",
+    "department": "Department",
+    "baseSalary": "Base Salary",
+    "otHours": "OT Hours",
+    "otPay": "OT Pay",
+    "bonus": "Annual Bonus",
+    "gross": "Gross Pay",
+    "sso": "Social Security (5%)",
+    "tax": "Withholding Tax",
+    "netPay": "Net Pay",
+    "print": "Print / Save PDF",
+    "note": "This is an estimated payslip for demonstration purposes"
+  },
+  "calendar": {
+    "title": "Leave Calendar",
+    "subtitle": "See who is on leave each day",
+    "today": "Today",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "noLeaves": "No leave requests this month"
+  },
+  "departments": {
+    "title": "Departments",
+    "subtitle": "Organize employees into departments",
+    "add": "Add Department",
+    "new": "New Department",
+    "edit": "Edit Department",
+    "name": "Department Name",
+    "code": "Code",
+    "employees": "Employees",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this department?",
+    "hasEmployees": "Cannot delete: employees are assigned to this department"
+  },
+  "announcements": {
+    "title": "Announcements",
+    "subtitle": "Company news and updates",
+    "add": "New Announcement",
+    "titleField": "Title",
+    "bodyField": "Message",
+    "bodyPlaceholder": "Share news with the company...",
+    "deleteConfirm": "Delete this announcement?",
+    "empty": "No announcements yet",
+    "by": "by"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "pendingLeaves": "leave request(s) awaiting approval",
+    "viewAll": "View all",
+    "empty": "You're all caught up"
+  },
+  "reviews": {
+    "title": "Performance Reviews",
+    "subtitle": "Annual goals and evaluations",
+    "add": "New Review",
+    "edit": "Edit Review",
+    "year": "Year",
+    "reviewer": "Reviewer",
+    "overall": "Overall Score",
+    "strengths": "Strengths",
+    "improvements": "Areas to Improve",
+    "goals": "Goals / KPIs",
+    "addGoal": "Add goal",
+    "goalTitle": "Goal",
+    "weight": "Weight",
+    "score": "Score",
+    "status": {
+      "draft": "Draft",
+      "final": "Final"
+    },
+    "save": "Save Review",
+    "deleteConfirm": "Delete this review?"
+  },
+  "recruitment": {
+    "title": "Recruitment",
+    "subtitle": "Open positions and applicant pipeline",
+    "tabPositions": "Positions",
+    "tabApplicants": "Applicants",
+    "addPosition": "New Position",
+    "editPosition": "Edit Position",
+    "positionTitle": "Job Title",
+    "headcount": "Headcount",
+    "description": "Description",
+    "applicants": "applicants",
+    "open": "Open",
+    "closed": "Closed",
+    "deleteConfirm": "Delete this position?",
+    "hasApplicants": "Cannot delete: position has applicants",
+    "addApplicant": "Add Applicant",
+    "applicantName": "Full Name",
+    "appliedFor": "Applied For",
+    "appliedDate": "Applied",
+    "notes": "Notes",
+    "moveTo": "Move to",
+    "status": {
+      "applied": "Applied",
+      "screening": "Screening",
+      "interview": "Interview",
+      "offer": "Offer",
+      "hired": "Hired",
+      "rejected": "Rejected"
+    }
+  },
+  "selfservice": {
+    "myProfile": "My Profile",
+    "myLeaves": "My Leave Requests",
+    "myPayslips": "My Payslips",
+    "welcome": "Welcome"
   }
 }
