@@ -1,3 +1,6 @@
+// ==============================
+// หน้าบันทึกเวลาทำงาน — ปุ่ม check-in/check-out และตารางประวัติเวลาเข้า-ออก + ชั่วโมง OT
+// ==============================
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Select from '@radix-ui/react-select';
@@ -14,10 +17,12 @@ const selectTriggerCls =
 
 type PunchAction = 'in' | 'out';
 
+/** หน้า attendance — HR/Executive สามารถเลือกพนักงานแล้วกดสถิติเวลาเข้า/ออกให้ได้ */
 export default function AttendancePage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const canEdit = ['hr', 'executive'].includes(user?.role ?? '');
+  // ส่วน state: ประวัติเวลาทำงาน, พนักงาน, รหัสที่เลือก, สถานะโหลด, ข้อความผลลัพธ์
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeeId, setEmployeeId] = useState('');
@@ -28,6 +33,7 @@ export default function AttendancePage() {
 
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
 
+  // ส่วนดึงข้อมูล: โหลดประวัติเวลาทำงาน + รายชื่อพนักงาน
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -46,12 +52,14 @@ export default function AttendancePage() {
     load();
   }, [load]);
 
+  // ตั้งค่าเริ่มต้น: เลือกพนักงานคนแรกอัตโนมัติเมื่อโหลดรายชื่อเสร็จ
   useEffect(() => {
     if (!employeeId && employees.length) {
       setEmployeeId(String(employees[0].employee_id));
     }
   }, [employees, employeeId]);
 
+  // ส่วน event handler: บันทึกเวลาเข้า ('in') หรือออก ('out') ของพนักงานที่เลือก
   const punch = async (action: PunchAction) => {
     if (!employeeId || punching) return;
     setPunching(action);
@@ -81,6 +89,7 @@ export default function AttendancePage() {
         <p className="text-sm text-slate-500">{t('attendance.subtitle')}</p>
       </div>
 
+      {/* ส่วนควบคุม: เลือกพนักงาน + ปุ่ม check-in/check-out + ข้อความผลลัพธ์ */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         {canEdit && (
           <>
@@ -145,6 +154,7 @@ export default function AttendancePage() {
 
       {loading && <SkeletonTable rows={6} cols={6} />}
 
+      {/* ส่วนแสดงตารางประวัติเวลาทำงาน */}
       {!loading && (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -154,6 +164,7 @@ export default function AttendancePage() {
                   t('attendance.date'),
                   t('leaves.employee'),
                   t('attendance.checkIn'),
+                  t('attendance.status'),
                   t('attendance.checkOut'),
                   t('attendance.hours'),
                   t('attendance.otHours'),
@@ -180,10 +191,23 @@ export default function AttendancePage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{r.check_in ?? '-'}</td>
+                  {/* สถานะการเข้างาน: เข้าก่อน/ตรง 08:00 = ปกติ (เขียว), หลัง 08:00 = เข้าสาย (แดง) */}
+                  <td className="px-4 py-3">
+                    {r.is_late ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">
+                        {t('attendance.late')}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                        {t('attendance.onTime')}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{r.check_out}</td>
                   <td className="px-4 py-3 text-slate-600">
                     {r.worked_hours == null ? '-' : `${Number(r.worked_hours).toFixed(1)}`}
                   </td>
+                  {/* แสดงชั่วโมง OT เป็นป้ายสีเหลืองเฉพาะเมื่อมีค่ามากกว่า 0 */}
                   <td className="px-4 py-3">
                     {Number(r.ot_hours) > 0 ? (
                       <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
@@ -197,7 +221,7 @@ export default function AttendancePage() {
               ))}
               {records.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center">
+                  <td colSpan={7} className="px-4 py-16 text-center">
                     <Inbox className="mx-auto mb-2 h-9 w-9 text-slate-300" />
                     <span className="text-sm text-slate-400">{t('common.noData')}</span>
                   </td>

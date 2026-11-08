@@ -1,10 +1,15 @@
+// ==============================
+// Zod schemas + TypeScript types — นิยามรูปร่างข้อมูลจาก API และ validation ของฟอร์มต่าง ๆ
+// ==============================
 import { z } from 'zod';
 
+// ---------- ประเภท (type) ร่วม ----------
 export type UserRole = 'hr' | 'executive';
 export type EmployeeStatus = 'active' | 'inactive' | 'terminated';
 export type LeaveType = 'annual' | 'sick' | 'personal' | 'unpaid';
 export type LeaveStatus = 'pending' | 'approved' | 'rejected';
 
+// ---------- สมาชิก / การยืนยันตัวตน (user, auth) ----------
 export const userSchema = z.object({
   id: z.number(),
   username: z.string(),
@@ -21,6 +26,7 @@ export const authResponseSchema = z.object({
 });
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 
+// ---------- พนักงาน (employee) ----------
 export const employeeSchema = z.object({
   employee_id: z.number(),
   first_name: z.string(),
@@ -31,6 +37,7 @@ export const employeeSchema = z.object({
   department_id: z.number(),
   department_name: z.string(),
   hire_date: z.string().nullable(),
+  // z.coerce.number() แปลงค่าจาก API (อาจมาเป็น string) ให้เป็นตัวเลขอัตโนมัติ
   salary: z.coerce.number(),
   status: z.string(),
   annual_leave_quota: z.number(),
@@ -40,6 +47,7 @@ export type Employee = z.infer<typeof employeeSchema>;
 
 export const employeeListSchema = z.array(employeeSchema);
 
+// ---------- แผนก (department) ----------
 export const departmentSchema = z.object({
   department_id: z.number(),
   department_name: z.string(),
@@ -49,6 +57,7 @@ export type Department = z.infer<typeof departmentSchema>;
 
 export const departmentListSchema = z.array(departmentSchema);
 
+// ---------- การลา (leave) ----------
 export const leaveSchema = z.object({
   leave_id: z.number(),
   employee_id: z.number(),
@@ -64,6 +73,8 @@ export type LeaveRequest = z.infer<typeof leaveSchema>;
 
 export const leaveListSchema = z.array(leaveSchema);
 
+// ---------- เวลาเข้า-ออกงาน (attendance) ----------
+// is_late = เข้าหลัง 08:00 (backend คำนวณเทียบเวลาเข้างานปกติให้)
 export const attendanceSchema = z.object({
   attendance_id: z.number(),
   employee_id: z.number(),
@@ -73,11 +84,13 @@ export const attendanceSchema = z.object({
   check_out: z.string().nullable(),
   worked_hours: z.coerce.number().nullable(),
   ot_hours: z.coerce.number(),
+  is_late: z.boolean(),
 });
 export type AttendanceRecord = z.infer<typeof attendanceSchema>;
 
 export const attendanceListSchema = z.array(attendanceSchema);
 
+// ---------- payroll (สลิปเงินเดือน) ----------
 export const payrollRecordSchema = z.object({
   payroll_id: z.number(),
   employee_id: z.number(),
@@ -96,6 +109,7 @@ export type PayrollRecord = z.infer<typeof payrollRecordSchema>;
 
 export const payrollListSchema = z.array(payrollRecordSchema);
 
+// ตัวเลขเงินรายเดือน (ใช้ซ้ำใน dashboard/executive stats)
 const monthMoneySchema = z.object({
   month: z.string(),
   gross: z.number(),
@@ -104,6 +118,7 @@ const monthMoneySchema = z.object({
   tax: z.number(),
 });
 
+// ---------- สถิติหน้า dashboard (HR) ----------
 export const dashboardStatsSchema = z.object({
   employeeCount: z.number(),
   activeEmployees: z.number(),
@@ -122,14 +137,43 @@ export const dashboardStatsSchema = z.object({
 });
 export type DashboardStats = z.infer<typeof dashboardStatsSchema>;
 
+// ---------- สถิติหน้า executive insights ----------
 export const executiveStatsSchema = z.object({
+  // งวดที่รายงานอ้างอิง (null = ยังไม่มีข้อมูล payroll เลย)
+  period: z.object({ year: z.number(), month: z.number() }).nullable(),
   latestCost: monthMoneySchema.nullable(),
+  // แนวโน้มต้นทุนย้อนหลัง 12 เดือน (gross = รวมโบนัส+OT, net = เงินสุทธิรวม)
+  costTrend: z.array(z.object({ month: z.string(), gross: z.number(), net: z.number() })),
   byDepartment: z.array(
     z.object({
       department: z.string(),
       activeEmployees: z.number(),
       avgSalary: z.number().nullable(),
     })
+  ),
+  // สุขภาพแผนก: วันลา/คน, % เข้าสาย, % OT ต่อเงินเดือน (null = ไม่มีข้อมูลมากพอจะคำนวณ)
+  departmentHealth: z.array(
+    z.object({
+      department: z.string(),
+      activeEmployees: z.number(),
+      leaveDaysPerEmployee: z.number().nullable(),
+      lateRate: z.number().nullable(),
+      otRatio: z.number().nullable(),
+    })
+  ),
+  // กำลังคน: จ้างใหม่ปีนี้, ลาออกสะสม, อัตราคงอยู่, ตำแหน่งเปิดรับ
+  workforce: z.object({
+    hiredThisYear: z.number(),
+    terminated: z.number(),
+    retentionRate: z.number(),
+    openPositions: z.number(),
+    openHeadcount: z.number(),
+  }),
+  // ผู้สมัครแยกตาม stage ของ pipeline
+  applicantsByStage: z.array(z.object({ status: z.string(), count: z.number() })),
+  // ช่วงเงินเดือนต่อแผนก (ต่ำ/กลาง/สูง)
+  salarySpread: z.array(
+    z.object({ department: z.string(), min: z.number(), median: z.number(), max: z.number() })
   ),
   topEarners: z.array(
     z.object({
@@ -148,6 +192,7 @@ export const executiveStatsSchema = z.object({
 });
 export type ExecutiveStats = z.infer<typeof executiveStatsSchema>;
 
+// ---------- schema ผลลัพธ์ย่อ (response ของ action ต่าง ๆ) ----------
 export const leaveCreatedSchema = z.object({
   leave_id: z.number(),
   employee_id: z.number(),
@@ -174,6 +219,7 @@ export const bonusResultSchema = z.object({
   amount: z.coerce.number(),
 });
 
+// ---------- payload/ฟอร์มสมัครสมาชิก (register) ----------
 export interface RegisterPayload {
   full_name: string;
   username: string;
@@ -190,6 +236,7 @@ export const registerFormSchema = z.object({
   role: z.enum(['hr', 'executive']),
 });
 
+// ---------- payload/ฟอร์มพนักงาน (employee) ----------
 export interface EmployeePayload {
   first_name: string;
   last_name: string;
@@ -220,6 +267,7 @@ export const employeeFormSchema = z.object({
   status: z.enum(['active', 'inactive', 'terminated']),
 });
 
+// ---------- payload/ฟอร์มการลา (leave) ----------
 export interface LeavePayload {
   employee_id: number;
   leave_type: LeaveType;
@@ -236,15 +284,18 @@ export const leaveFormSchema = z
     end_date: z.string().min(1, 'End date is required'),
     reason: z.string(),
   })
+  // refine: บังคับว่าวันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มต้น (เทียบเป็น string YYYY-MM-DD ได้)
   .refine((v) => v.end_date >= v.start_date, {
     message: 'end_date must be on or after start_date',
     path: ['end_date'],
   });
 
+/** ดึงข้อความ error แรกจาก ZodError มาแสดงผล (ถ้าไม่มีใช้ข้อความ default) */
 export function firstIssueMessage(error: z.ZodError): string {
   return error.issues[0]?.message ?? 'Invalid input';
 }
 
+// ---------- ประกาศ (announcement) ----------
 export const announcementSchema = z.object({
   announcement_id: z.number(),
   title: z.string(),
@@ -261,6 +312,7 @@ export interface AnnouncementPayload {
   body: string;
 }
 
+// ---------- การประเมินผล (review) ----------
 export const reviewGoalSchema = z.object({
   goal_id: z.number().optional(),
   title: z.string(),
@@ -302,6 +354,7 @@ export interface ReviewPayload {
   goals: ReviewGoalPayload[];
 }
 
+// ---------- การสรรหาบุคลากร (recruitment: ตำแหน่งงาน + ผู้สมัคร) ----------
 export const jobPositionSchema = z.object({
   position_id: z.number(),
   title: z.string(),
@@ -349,6 +402,7 @@ export interface ApplicantPayload {
   notes: string | null;
 }
 
+// ---------- payload อื่น ๆ (แผนก, บัญชีผู้ใช้พนักงาน) ----------
 export interface DepartmentPayload {
   department_name: string;
   department_code: string;
@@ -359,6 +413,7 @@ export interface AccountPayload {
   password: string;
 }
 
+// ---------- ฟอร์ม validation ของ dialogs ต่าง ๆ ----------
 export const accountFormSchema = z.object({
   username: z.string().trim().min(3, 'Username must be at least 3 characters').max(50),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -366,6 +421,7 @@ export const accountFormSchema = z.object({
 
 export const departmentFormSchema = z.object({
   department_name: z.string().trim().min(1, 'Department name is required').max(100),
+  // toUpperCase() ทำหน้าที่เป็น transform บังคับรหัสแผนกเป็นตัวพิมพ์ใหญ่หลัง validate
   department_code: z.string().trim().min(1, 'Department code is required').max(10).toUpperCase(),
 });
 

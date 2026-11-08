@@ -1,3 +1,6 @@
+// ==============================
+// HTTP client (axios) + ชุดเมธอดเรียก API — แนบ JWT อัตโนมัติและตรวจผลลัพธ์ด้วย zod schema
+// ==============================
 import axios from 'axios';
 import type { AxiosError, AxiosRequestConfig } from 'axios';
 import { z } from 'zod';
@@ -57,6 +60,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const http = axios.create({ baseURL: `${API_URL}/api` });
 
+// Request interceptor: แนบ JWT token (จาก localStorage) ใน header Authorization ทุกคำขอ
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem('hr_token');
   if (token) {
@@ -65,6 +69,7 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor: จัดการ error รวมศูนย์ — ถ้าโดน 401 ให้ลบ token และแจ้ง event ให้ AuthContext ทำ logout
 http.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ error?: string }>) => {
@@ -77,13 +82,16 @@ http.interceptors.response.use(
   }
 );
 
+/** wrapper สำหรับยิง request แล้ว parse ผลลัพธ์ด้วย zod schema — ได้ type ถูกต้องหรือโยน error ทันที */
 async function request<T>(schema: z.ZodType<T>, config: AxiosRequestConfig): Promise<T> {
   const response = await http.request(config);
   return schema.parse(response.data);
 }
 
 export const api = {
+  // ---------- แผนก (departments) ----------
   getEmployees: () => request<Employee[]>(employeeListSchema, { url: '/employees' }),
+  // ---------- พนักงาน (employees) ----------
   getEmployee: (id: number) => request<Employee>(employeeSchema, { url: `/employees/${id}` }),
   getDepartments: () => request<Department[]>(departmentListSchema, { url: '/departments' }),
   createDepartment: (body: DepartmentPayload) =>
@@ -98,6 +106,7 @@ export const api = {
     request<Employee>(employeeSchema, { url: '/employees', method: 'POST', data: body }),
   updateEmployee: (id: number, body: EmployeePayload) =>
     request<Employee>(employeeSchema, { url: `/employees/${id}`, method: 'PUT', data: body }),
+  // ---------- การลา (leaves) ----------
   getLeaves: (employeeId?: number) =>
     request<LeaveRequest[]>(leaveListSchema, {
       url: '/leaves',
@@ -111,6 +120,7 @@ export const api = {
       method: 'PATCH',
       data: { status },
     }),
+  // ---------- เวลาเข้า-ออกงาน (attendance) ----------
   getAttendance: (employeeId?: number) =>
     request<AttendanceRecord[]>(attendanceListSchema, {
       url: '/attendance',
@@ -128,6 +138,7 @@ export const api = {
       method: 'POST',
       data: { employee_id: employeeId },
     }),
+  // ---------- เงินเดือน/ค่าจ้าง (payroll) ----------
   getPayroll: (year: number, month: number, employeeId?: number) =>
     request<PayrollRecord[]>(payrollListSchema, {
       url: '/payroll',
@@ -141,13 +152,21 @@ export const api = {
       method: 'PUT',
       data: { employee_id: employeeId, bonus_year: bonusYear, amount },
     }),
+  // ---------- สมาชิก/การเข้าสู่ระบบ (auth) ----------
   login: (email: string, password: string) =>
     request<AuthResponse>(authResponseSchema, { url: '/auth/login', method: 'POST', data: { email, password } }),
   register: (payload: RegisterPayload) =>
     request<AuthResponse>(authResponseSchema, { url: '/auth/register', method: 'POST', data: payload }),
   getMe: () => request<User>(userSchema, { url: '/auth/me' }),
+  // ---------- สถิติ (dashboard / executive) ----------
   getDashboard: () => request<DashboardStats>(dashboardStatsSchema, { url: '/stats/dashboard' }),
-  getExecutive: () => request<ExecutiveStats>(executiveStatsSchema, { url: '/stats/executive' }),
+  // ไม่ส่ง year/month = backend เลือกงวด payroll ล่าสุดให้อัตโนมัติ
+  getExecutive: (year?: number, month?: number) =>
+    request<ExecutiveStats>(executiveStatsSchema, {
+      url: '/stats/executive',
+      params: year && month ? { year, month } : undefined,
+    }),
+  // ---------- ประกาศ (announcements) ----------
   getAnnouncements: () => request<Announcement[]>(announcementListSchema, { url: '/announcements' }),
   createAnnouncement: (body: AnnouncementPayload) =>
     request<Announcement>(announcementSchema, {
@@ -160,6 +179,7 @@ export const api = {
       url: `/announcements/${id}`,
       method: 'DELETE',
     }),
+  // ---------- การประเมินผล (reviews) ----------
   getReviews: (employeeId?: number) =>
     request<Review[]>(reviewListSchema, {
       url: '/reviews',
@@ -172,6 +192,7 @@ export const api = {
     request<Review>(reviewSchema, { url: `/reviews/${id}`, method: 'PUT', data: body }),
   deleteReview: (id: number) =>
     request<{ deleted: boolean }>(z.object({ deleted: z.boolean() }), { url: `/reviews/${id}`, method: 'DELETE' }),
+  // ---------- การสรรหาบุคลากร (recruitment: ตำแหน่ง + ผู้สมัคร) ----------
   getPositions: () => request<JobPosition[]>(positionListSchema, { url: '/recruitment/positions' }),
   createPosition: (body: PositionPayload) =>
     request<JobPosition>(jobPositionSchema, { url: '/recruitment/positions', method: 'POST', data: body }),
