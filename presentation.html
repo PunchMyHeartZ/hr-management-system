@@ -15,6 +15,8 @@
   #deck { height: 100vh; }
   .slide {
     display: none;
+    position: relative;
+    z-index: 1;
     height: 100vh;
     flex-direction: column;
     justify-content: center;
@@ -96,19 +98,58 @@
   .dots i { width: 8px; height: 8px; border-radius: 999px; background: #c7d2fe; cursor: pointer; transition: .2s; }
   .dots i.on { background: #4f46e5; width: 22px; }
   #counter { font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+  /* decorative background blobs */
+  .blobs { position: fixed; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(80px); }
+  .blob.b1 { width: 30vw; height: 30vw; background: #c7d2fe; opacity: .5; top: -10vw; left: -8vw; }
+  .blob.b2 { width: 26vw; height: 26vw; background: #ddd6fe; opacity: .45; bottom: -10vw; right: -7vw; }
+  .blob.b3 { width: 16vw; height: 16vw; background: #fbcfe8; opacity: .3; top: 42%; left: 55%; }
+
+  /* card icons */
+  .card .ico { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; flex: none; }
+  .card .ico svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* big stat blocks */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; text-align: center; padding: 14px 8px 12px; box-shadow: 0 4px 14px rgba(79,70,229,.06); }
+  .stat b { display: block; font-size: clamp(26px, 3vw, 40px); font-weight: 800; line-height: 1.1; background: linear-gradient(90deg, #4f46e5, #9333ea); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat span { font-size: clamp(10px, 1vw, 12.5px); color: #64748b; }
+
+  /* dashboard mock */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; box-shadow: 0 4px 14px rgba(79,70,229,.06); }
+  .kpi span { font-size: clamp(10px, 1vw, 12px); color: #64748b; display: block; }
+  .kpi b { font-size: clamp(18px, 2vw, 27px); font-weight: 800; color: #0f172a; }
+  .chartbox { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 18px 20px; box-shadow: 0 4px 14px rgba(79,70,229,.06); }
+  .chartbox h5 { font-size: clamp(11px, 1.1vw, 13.5px); color: #334155; margin-bottom: 14px; font-weight: 700; }
+  .bars { display: flex; align-items: flex-end; gap: clamp(6px, 1vw, 14px); height: clamp(120px, 19vh, 180px); margin-bottom: 20px; }
+  .bars .bar { flex: 1; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, #818cf8, #4f46e5); position: relative; }
+  .bars .bar.alt { background: linear-gradient(180deg, #c4b5fd, #8b5cf6); }
+  .bars .bar i { position: absolute; bottom: -20px; left: 0; right: 0; text-align: center; font-style: normal; font-size: clamp(8px, .85vw, 11px); color: #94a3b8; }
+  .donut { width: clamp(110px, 13vw, 165px); aspect-ratio: 1; border-radius: 50%; background: conic-gradient(#4f46e5 0 45%, #8b5cf6 45% 70%, #f59e0b 70% 88%, #f43f5e 88% 100%); position: relative; margin: 4px auto 0; }
+  .donut::after { content: '4 ประเภท'; position: absolute; inset: 22%; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: clamp(10px, 1vw, 13px); font-weight: 700; color: #334155; text-align: center; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: center; margin-top: 14px; }
+  .legend i { font-style: normal; font-size: clamp(9px, .95vw, 12px); color: #475569; display: inline-flex; align-items: center; gap: 6px; }
+  .legend i::before { content: ''; width: 9px; height: 9px; border-radius: 3px; background: var(--c); display: inline-block; }
+
+  /* ER entity accent colors */
+  .entity h4 { background: linear-gradient(90deg, var(--ec, #4f46e5), var(--ec2, #7c3aed)); }
+  .entity { border-color: var(--ec, #4f46e5); }
 </style>
 </head>
 <body>
+<div class="blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 <div id="deck">
 
   <!-- 1 : TITLE -->
   <section class="slide">
     <span class="kicker">PROJECT PRESENTATION</span>
     <h1>ระบบบริหารทรัพยากรบุคคล<br /><span class="grad">HR Management System</span></h1>
-    <p class="sub" style="margin-top:18px">ระบบ HR ครบวงจร — พนักงาน • การลา • เวลาทำงาน/OT • เงินเดือน/ประกันสังคม/ภาษี • สิทธิ์การใช้งาน 2 ระดับ • รองรับ 2 ภาษา (ไทย/English)</p>
+    <p class="sub" style="margin-top:18px">ระบบ HR ครบวงจร — พนักงาน • การลา • เวลาทำงาน/OT • เงินเดือน/ประกันสังคม/ภาษี • ประกวดผลงาน • รับสมัครงาน • สิทธิ์ 3 ระดับ (HR/ผู้บริหาร/พนักงาน) • รองรับ 2 ภาษา (ไทย/English)</p>
     <div>
-      <span class="chip">Vite + React</span><span class="chip">Tailwind CSS</span><span class="chip">Radix UI</span>
-      <span class="chip green">Node.js + Express</span><span class="chip green">JWT + bcrypt</span>
+      <span class="chip">Vite + React</span><span class="chip">TypeScript</span><span class="chip">Tailwind CSS</span><span class="chip">Radix UI</span>
+      <span class="chip green">Node.js + Express</span><span class="chip green">JWT + bcrypt</span><span class="chip green">Prisma ORM</span>
       <span class="chip amber">PostgreSQL 18</span><span class="chip amber">pgAdmin</span>
       <span class="chip rose">i18next</span><span class="chip rose">Recharts</span>
     </div>
@@ -119,14 +160,58 @@
   <section class="slide">
     <span class="kicker">OVERVIEW</span>
     <h2>ฟีเจอร์หลักของระบบ</h2>
-    <p class="sub">พัฒนาครบทั้ง Frontend, Backend และ Database</p>
-    <div class="grid g3">
-      <div class="card"><b>จัดการพนักงาน</b><span>เพิ่ม / แก้ไข / ค้นหา / กรองแผนก • สถานะการทำงาน • สิทธิ์วันลาคงเหลือ</span></div>
-      <div class="card"><b>การลา (Leave)</b><span>ยื่นใบลา 4 ประเภท • อนุมัติ/ไม่อนุมัติ • นับวันอัตโนมัติ</span></div>
-      <div class="card"><b>เวลาทำงาน + OT</b><span>บันทึกเข้า-ออกงาน • คิด OT อัตโนมัติ (เกิน 8 ชม. หักพักเที่ยง 1 ชม.)</span></div>
-      <div class="card"><b>Payroll Engine</b><span>ประกันสังคม 5% (สูงสุด 750) • ภาษีขั้นบันได • โบนัสหักภาษีอัตราขั้นสูง • ส่งออก CSV</span></div>
-      <div class="card"><b>สิทธิ์การใช้งาน</b><span>ระบบสมาชิก + Login (JWT) • ระดับ HR และผู้บริหาร • รายงานลับเฉพาะผู้บริหาร</span></div>
-      <div class="card"><b>Dashboard + กราฟ</b><span>KPI ภาพรวม • กราฟการลา / เงินจ่ายรายเดือน / แยกแผนก • ไทย-อังกฤษ</span></div>
+    <p class="sub">พัฒนาครบทั้ง Frontend, Backend และ Database — เขียนด้วย TypeScript ทั้งระบบ</p>
+    <div class="grid g4">
+      <div class="card"><div class="ico" style="background:#eef2ff;color:#4f46e5"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.9-3 3.3-4.6 6-4.6s5.1 1.6 6 4.6"/><circle cx="17" cy="9" r="2.4"/><path d="M16.2 14.4c2.3.4 4 1.7 4.6 4.1"/></svg></div><b>จัดการพนักงาน</b><span>เพิ่ม/แก้ไข/ค้นหา/กรองแผนก • สถานะการทำงาน • สิทธิ์วันลาคงเหลือ</span></div>
+      <div class="card"><div class="ico" style="background:#f5f3ff;color:#7c3aed"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v3.5M16 3v3.5"/></svg></div><b>การลา + ปฏิทิน</b><span>ยื่นใบลา 4 ประเภท • อนุมัติ/ไม่อนุมัติ • ปฏิทินการลารายเดือน</span></div>
+      <div class="card"><div class="ico" style="background:#e0f2fe;color:#0284c7"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2.5"/></svg></div><b>เวลาทำงาน + OT</b><span>บันทึกเข้า-ออกงาน • คิด OT อัตโนมัติ (เกิน 8 ชม. หักพักเที่ยง 1 ชม.)</span></div>
+      <div class="card"><div class="ico" style="background:#dcfce7;color:#15803d"><svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></svg></div><b>Payroll Engine</b><span>ประกันสังคม 5% (สูงสุด 750) • ภาษีขั้นบันได • โบนัส • ส่งออก CSV</span></div>
+      <div class="card"><div class="ico" style="background:#fef3c7;color:#b45309"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M9.5 13.2 8 21l4-2.4L16 21l-1.5-7.8"/></svg></div><b>ประกวดผลงาน</b><span>รีวิวรายปี + เป้าหมาย (Goals) ถ่วงน้ำหนักคะแนน • จุดแข็ง/จุดพัฒนา</span></div>
+      <div class="card"><div class="ico" style="background:#ffe4e6;color:#be123c"><svg viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 12.5h18"/></svg></div><b>รับสมัครงาน</b><span>ตำแหน่งที่เปิดรับ (Headcount) • ผู้สมัคร • อัปเดตสถานะ Pipeline</span></div>
+      <div class="card"><div class="ico" style="background:#eef2ff;color:#4f46e5"><svg viewBox="0 0 24 24"><path d="M4 10.5 17 5v14L4 13.5v-3z"/><path d="M17.5 9a5 5 0 0 1 0 6M7 14.5 8 19h2.2l-.8-4"/></svg></div><b>ประกาศบริษัท</b><span>ฝ่ายบุคคลโพสต์ข่าวสาร • กระดิ่งแจ้งเตือนบน Dashboard</span></div>
+      <div class="card"><div class="ico" style="background:#f5f3ff;color:#7c3aed"><svg viewBox="0 0 24 24"><path d="M12 3 19 5.8V11c0 4.6-3 7.9-7 10-4-2.1-7-5.4-7-10V5.8L12 3z"/><path d="m9 11.5 2 2 4-4.5"/></svg></div><b>สิทธิ์ 3 ระดับ</b><span>HR / ผู้บริหาร / พนักงาน — Self-service: โปรไฟล์ ใบลา สลิปเงินเดือนของตัวเอง</span></div>
+    </div>
+  </section>
+
+  <!-- 3 : DASHBOARD PREVIEW -->
+  <section class="slide">
+    <span class="kicker">DASHBOARD PREVIEW</span>
+    <h2>ภาพรวมในหน้าเดียว — KPI + กราฟ</h2>
+    <p class="sub">ตัวอย่างหน้า Dashboard (บนเว็บจริงวาดด้วย Recharts)</p>
+    <div class="kpis">
+      <div class="kpi"><span>พนักงานทั้งหมด</span><b>48</b></div>
+      <div class="kpi"><span>กำลังทำงาน</span><b style="color:#15803d">42</b></div>
+      <div class="kpi"><span>ใบลารออนุมัติ</span><b style="color:#b45309">5</b></div>
+      <div class="kpi"><span>ค่าจ่ายรวมเดือนนี้</span><b style="color:#7c3aed">1.82M</b></div>
+    </div>
+    <div class="grid g2">
+      <div class="chartbox">
+        <h5>ค่าจ่ายรวมรายเดือน (ล้านบาท)</h5>
+        <div class="bars">
+          <div class="bar" style="height:52%"><i>ม.ค.</i></div>
+          <div class="bar" style="height:48%"><i>ก.พ.</i></div>
+          <div class="bar" style="height:55%"><i>มี.ค.</i></div>
+          <div class="bar" style="height:50%"><i>เม.ย.</i></div>
+          <div class="bar" style="height:58%"><i>พ.ค.</i></div>
+          <div class="bar" style="height:62%"><i>มิ.ย.</i></div>
+          <div class="bar" style="height:60%"><i>ก.ค.</i></div>
+          <div class="bar" style="height:66%"><i>ส.ค.</i></div>
+          <div class="bar" style="height:70%"><i>ก.ย.</i></div>
+          <div class="bar alt" style="height:76%"><i>ต.ค.</i></div>
+          <div class="bar alt" style="height:82%"><i>พ.ย.</i></div>
+          <div class="bar alt" style="height:90%"><i>ธ.ค.</i></div>
+        </div>
+      </div>
+      <div class="chartbox">
+        <h5>สัดส่วนวันลาแยกประเภท (ปีนี้)</h5>
+        <div class="donut"></div>
+        <div class="legend">
+          <i style="--c:#4f46e5">พักร้อน 45%</i>
+          <i style="--c:#8b5cf6">ป่วย 25%</i>
+          <i style="--c:#f59e0b">กิจส่วนตัว 18%</i>
+          <i style="--c:#f43f5e">ไม่รับค่าจ้าง 12%</i>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -137,20 +222,20 @@
     <p class="sub">3-Tier Architecture — แยกชั้นชัดเจน</p>
     <div class="flow">
       <div class="node" style="border-color:#6366f1">
-        <b>Frontend</b><small>Vite + React 18</small>
+        <b>Frontend</b><small>Vite + React 18 + TypeScript</small>
         <small>Tailwind CSS v4 • Radix UI</small>
         <small>i18next (TH/EN) • Recharts</small>
       </div>
       <div class="arrow">⇄</div>
       <div class="node" style="border-color:#10b981">
-        <b>Backend REST API</b><small>Node.js + Express</small>
+        <b>Backend REST API</b><small>Node.js + Express + TypeScript</small>
         <small>JWT Auth Middleware</small>
-        <small>Role-based Access (HR/Exec)</small>
+        <small>Role-based Access (HR/Exec/Employee)</small>
       </div>
       <div class="arrow">⇄</div>
       <div class="node" style="border-color:#f59e0b">
-        <b>PostgreSQL 18</b><small>7 Tables + Constraints</small>
-        <small>pg (node-postgres) Pool</small>
+        <b>PostgreSQL 18</b><small>12 Tables + Constraints</small>
+        <small>pg Pool + Prisma ORM</small>
         <small>จัดการผ่าน pgAdmin</small>
       </div>
     </div>
@@ -167,7 +252,7 @@
     <h2>เอนทิตี้หลัก — ข้อมูลองค์กรและการลา</h2>
     <p class="sub">ความสัมพันธ์แบบ One-to-Many (1 ──∞)</p>
     <div class="er">
-      <div class="entity">
+      <div class="entity" style="--ec:#0284c7;--ec2:#4f46e5">
         <h4>departments</h4>
         <ul>
           <li><span class="pk">PK</span> department_id SERIAL</li>
@@ -176,7 +261,7 @@
         </ul>
       </div>
       <div class="rel">1 ──∞</div>
-      <div class="entity">
+      <div class="entity" style="--ec:#4f46e5;--ec2:#6d28d9">
         <h4>employees</h4>
         <ul>
           <li><span class="pk">PK</span> employee_id SERIAL</li>
@@ -189,7 +274,7 @@
         </ul>
       </div>
       <div class="rel">1 ──∞</div>
-      <div class="entity">
+      <div class="entity" style="--ec:#7c3aed;--ec2:#9333ea">
         <h4>leave_requests</h4>
         <ul>
           <li><span class="pk">PK</span> leave_id SERIAL</li>
@@ -209,7 +294,7 @@
     <h2>เอนทิตี้เงินเดือนและผู้ใช้งาน</h2>
     <p class="sub">ทุกตารางผูกกับ employees ด้วย FK (CASCADE)</p>
     <div class="er">
-      <div class="entity">
+      <div class="entity" style="--ec:#0284c7;--ec2:#0ea5e9">
         <h4>attendance</h4>
         <ul>
           <li><span class="pk">PK</span> attendance_id</li>
@@ -219,7 +304,7 @@
           <li>UNIQUE (employee_id, work_date)</li>
         </ul>
       </div>
-      <div class="entity">
+      <div class="entity" style="--ec:#15803d;--ec2:#10b981">
         <h4>bonuses</h4>
         <ul>
           <li><span class="pk">PK</span> bonus_id</li>
@@ -228,7 +313,7 @@
           <li>UNIQUE (employee_id, bonus_year)</li>
         </ul>
       </div>
-      <div class="entity">
+      <div class="entity" style="--ec:#b45309;--ec2:#d97706">
         <h4>payroll_records</h4>
         <ul>
           <li><span class="pk">PK</span> payroll_id</li>
@@ -239,23 +324,78 @@
           <li>UNIQUE (employee_id, ปี, เดือน)</li>
         </ul>
       </div>
-      <div class="entity">
+      <div class="entity" style="--ec:#be123c;--ec2:#e11d48">
         <h4>users</h4>
         <ul>
           <li><span class="pk">PK</span> user_id</li>
           <li>username / email UNIQUE</li>
-          <li>password_hash (bcrypt)</li>
-          <li>role CHECK (hr / executive)</li>
+          <li>password_hash (bcrypt), full_name</li>
+          <li>role CHECK (hr / executive / employee)</li>
+          <li><span class="fk">FK</span> employee_id → employees (1─1, SET NULL)</li>
         </ul>
       </div>
     </div>
+  </section>
+
+  <!-- 6 : ER V3 MODULES -->
+  <section class="slide">
+    <span class="kicker">ENTITY DESIGN 3/3</span>
+    <h2>เอนทิตี้โมดูลเสริม v3 — HR ครบวงจร</h2>
+    <p class="sub">ประกาศ • ประกวดผลงาน • รับสมัครงาน (เพิ่ม 5 ตาราง รวมเป็น 12 ตาราง)</p>
+    <div class="er">
+      <div class="entity" style="--ec:#be123c;--ec2:#f43f5e">
+        <h4>announcements</h4>
+        <ul>
+          <li><span class="pk">PK</span> announcement_id</li>
+          <li>title, body</li>
+          <li><span class="fk">FK</span> created_by → users (SET NULL)</li>
+          <li>created_at</li>
+        </ul>
+      </div>
+      <div class="entity" style="--ec:#7c3aed;--ec2:#9333ea">
+        <h4>reviews</h4>
+        <ul>
+          <li><span class="pk">PK</span> review_id</li>
+          <li><span class="fk">FK</span> employee_id → employees</li>
+          <li>period_year, reviewer_name</li>
+          <li>overall_score, strengths, improvements</li>
+          <li>UNIQUE (employee_id, ปี)</li>
+        </ul>
+      </div>
+      <div class="entity" style="--ec:#8b5cf6;--ec2:#a855f7">
+        <h4>review_goals</h4>
+        <ul>
+          <li><span class="pk">PK</span> goal_id</li>
+          <li><span class="fk">FK</span> review_id → reviews (CASCADE)</li>
+          <li>title, weight, score</li>
+        </ul>
+      </div>
+      <div class="entity" style="--ec:#0284c7;--ec2:#0ea5e9">
+        <h4>positions</h4>
+        <ul>
+          <li><span class="pk">PK</span> position_id</li>
+          <li>title, headcount, status (open)</li>
+          <li><span class="fk">FK</span> department_id → departments (SET NULL)</li>
+        </ul>
+      </div>
+      <div class="entity" style="--ec:#15803d;--ec2:#10b981">
+        <h4>applicants</h4>
+        <ul>
+          <li><span class="pk">PK</span> applicant_id</li>
+          <li><span class="fk">FK</span> position_id → positions (CASCADE)</li>
+          <li>full_name, email, phone</li>
+          <li>status (applied/…), notes</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">reviews 1 ──∞ review_goals (เป้าหมายถ่วงน้ำหนักคะแนน) • positions 1 ──∞ applicants (ผู้สมัครต่อตำแหน่งที่เปิดรับ)</p>
   </section>
 
   <!-- 6 : DDL -->
   <section class="slide">
     <span class="kicker">DDL — pgAdmin</span>
     <h2>สร้างตารางด้วย DDL Script</h2>
-    <p class="sub">รันผ่าน pgAdmin Query Tool — 4 ไฟล์ตามลำดับการพัฒนา (Migrations)</p>
+    <p class="sub">รันผ่าน pgAdmin Query Tool — 5 ไฟล์ตามลำดับการพัฒนา (Migrations) • มี Prisma schema สะท้อนโครงสร้างเดียวกัน</p>
     <pre.sql><span class="c">-- ตัวอย่างจาก schema.sql (ตาราง employees)</span>
 <span class="k">CREATE TABLE</span> <span class="t">employees</span> (
     employee_id    <span class="k">SERIAL PRIMARY KEY</span>,
@@ -269,11 +409,12 @@
     annual_leave_quota <span class="k">INT NOT NULL DEFAULT</span> 10
 );
 <span class="k">CREATE INDEX</span> idx_employees_department <span class="k">ON</span> <span class="t">employees</span>(department_id);</pre>
-    <div class="grid g4" style="margin-top:18px">
-      <div class="card"><b>schema.sql</b><span>departments, employees, leave_requests</span></div>
-      <div class="card"><b>migration_payroll.sql</b><span>attendance, bonuses, payroll_records</span></div>
-      <div class="card"><b>migration_auth.sql</b><span>users + บัญชีทดลอง (bcrypt)</span></div>
-      <div class="card"><b>migration_v2.sql</b><span>คอลัมน์สิทธิ์วันลา</span></div>
+    <div class="grid g3" style="margin-top:18px">
+      <div class="card"><b><span style="display:inline-flex;width:22px;height:22px;border-radius:999px;background:#4f46e5;color:#fff;font-size:12px;align-items:center;justify-content:center;margin-right:8px">1</span>schema.sql</b><span>departments, employees, leave_requests</span></div>
+      <div class="card"><b><span style="display:inline-flex;width:22px;height:22px;border-radius:999px;background:#0284c7;color:#fff;font-size:12px;align-items:center;justify-content:center;margin-right:8px">2</span>migration_payroll.sql</b><span>attendance, bonuses, payroll_records</span></div>
+      <div class="card"><b><span style="display:inline-flex;width:22px;height:22px;border-radius:999px;background:#15803d;color:#fff;font-size:12px;align-items:center;justify-content:center;margin-right:8px">3</span>migration_auth.sql</b><span>users + บัญชีทดลอง (bcrypt)</span></div>
+      <div class="card"><b><span style="display:inline-flex;width:22px;height:22px;border-radius:999px;background:#b45309;color:#fff;font-size:12px;align-items:center;justify-content:center;margin-right:8px">4</span>migration_v2.sql</b><span>คอลัมน์สิทธิ์วันลา</span></div>
+      <div class="card"><b><span style="display:inline-flex;width:22px;height:22px;border-radius:999px;background:#be123c;color:#fff;font-size:12px;align-items:center;justify-content:center;margin-right:8px">5</span>migration_v3.sql</b><span>announcements, reviews, review_goals, positions, applicants</span></div>
     </div>
   </section>
 
@@ -281,15 +422,19 @@
   <section class="slide">
     <span class="kicker">BACKEND</span>
     <h2>REST API Endpoints</h2>
-    <p class="sub">ทุก endpoint ตรวจสิทธิ์ด้วย JWT • การแก้ไขข้อมูลต้องเป็น HR หรือผู้บริหาร</p>
+    <p class="sub">39 Endpoints • ทุก endpoint ตรวจสิทธิ์ด้วย JWT (ยกเว้น register / login) • บทบาทพนักงานเห็นเฉพาะข้อมูลของตัวเอง</p>
     <table class="tbl">
       <tr><th>Method</th><th>Endpoint</th><th>รายละเอียด</th><th>สิทธิ์</th></tr>
-      <tr><td>POST</td><td>/api/auth/register · /login · GET /me</td><td>สมัครสมาชิก / เข้าสู่ระบบ (JWT) / ข้อมูลปัจจุบัน</td><td>Public</td></tr>
-      <tr><td>GET POST PUT</td><td>/api/employees</td><td>รายชื่อ (JOIN ชื่อแผนก) / เพิ่ม / แก้ไข</td><td>ดู: ทุกคน · แก้: HR+Exec</td></tr>
-      <tr><td>GET POST PATCH</td><td>/api/leaves</td><td>ใบลา / ยื่นใหม่ / อนุมัติ-ไม่อนุมัติ</td><td>ดู: ทุกคน · อนุมัติ: HR+Exec</td></tr>
+      <tr><td>POST GET</td><td>/api/auth/register · /login · /me</td><td>สมัครสมาชิก / เข้าสู่ระบบ (JWT) / ข้อมูลปัจจุบัน</td><td>Public</td></tr>
+      <tr><td>GET POST PUT</td><td>/api/employees · /:id/account</td><td>รายชื่อ (JOIN แผนก) / เพิ่ม / แก้ไข / สร้างบัญชี self-service ให้พนักงาน</td><td>ดู: ตามบทบาท · แก้: HR+Exec</td></tr>
+      <tr><td>GET POST PUT DELETE</td><td>/api/departments</td><td>จัดการแผนก (ลบไม่ได้ถ้ายังมีพนักงาน — RESTRICT)</td><td>ดู: ทุกคน · แก้: HR+Exec</td></tr>
+      <tr><td>GET POST PATCH</td><td>/api/leaves</td><td>ใบลา / ยื่นใหม่ / อนุมัติ-ไม่อนุมัติ</td><td>พนักงานยื่นเองได้ · อนุมัติ: HR+Exec</td></tr>
       <tr><td>GET POST</td><td>/api/attendance/check-in · /check-out</td><td>บันทึกเวลา + คิด OT อัตโนมัติ</td><td>HR+Exec</td></tr>
-      <tr><td>GET POST PUT</td><td>/api/payroll · /generate · /bonus</td><td>Payslip / คำนวณทั้งเดือน (Transaction) / ตั้งโบนัส</td><td>ดู: ทุกคน · คำนวณ: HR+Exec</td></tr>
-      <tr><td>GET</td><td>/api/stats/dashboard · /executive</td><td>ข้อมูลกราฟ / รายงานลับผู้บริหาร</td><td>Dashboard: ทุกคน · Executive: <b>ผู้บริหารเท่านั้น</b></td></tr>
+      <tr><td>GET POST PUT</td><td>/api/payroll · /generate · /bonus</td><td>Payslip / คำนวณทั้งเดือน (Transaction) / ตั้งโบนัส</td><td>พนักงานเห็นของตัวเอง · คำนวณ: HR+Exec</td></tr>
+      <tr><td>GET</td><td>/api/stats/dashboard · /executive</td><td>ข้อมูลกราฟ / รายงานเฉพาะผู้บริหาร</td><td>Executive: <b>ผู้บริหารเท่านั้น</b></td></tr>
+      <tr><td>GET POST DELETE</td><td>/api/announcements</td><td>ประกาศบริษัท (ผู้เขียนเชื่อมกับ users)</td><td>อ่าน: ทุกคน · โพสต์: HR+Exec</td></tr>
+      <tr><td>GET POST PUT DELETE</td><td>/api/reviews</td><td>ประกวดผลงานรายปี + เป้าหมายถ่วงน้ำหนัก</td><td>ดู: ตามบทบาท · จัดการ: HR+Exec</td></tr>
+      <tr><td>GET POST PATCH</td><td>/api/recruitment/positions · /applicants</td><td>ตำแหน่งเปิดรับ / ผู้สมัคร / อัปเดตสถานะ Pipeline</td><td>HR+Exec</td></tr>
     </table>
   </section>
 
@@ -305,14 +450,18 @@
       <div class="arrow">→</div>
       <div class="node" style="border-color:#10b981"><b>Middleware</b><small>requireAuth (401) + requireRole (403)</small></div>
     </div>
-    <div class="grid g2" style="margin-top:24px">
+    <div class="grid g3" style="margin-top:24px">
       <div class="card">
         <b><span class="chip">HR</span> ฝ่ายบุคคล</b>
-        <span>จัดการข้อมูลได้ทุกอย่าง — พนักงาน ใบลา เวลาทำงาน เงินเดือน โบนัส</span>
+        <span>จัดการข้อมูลได้ทุกอย่าง — พนักงาน ใบลา เวลาทำงาน เงินเดือน โบนัส รีวิว รับสมัครงาน ประกาศ</span>
       </div>
       <div class="card">
         <b><span class="chip amber">EXECUTIVE</span> ผู้บริหาร</b>
-        <span>ใช้งานได้ทุกอย่างเช่นกัน + <b>รายงานลับเฉพาะผู้บริหาร</b> (Top 5 เงินเดือน, ต้นทุนรายแผนก) — HR เรียก API นี้จะได้ 403</span>
+        <span>ใช้งานได้ทุกอย่างเช่นกัน + <b>รายงานเฉพาะผู้บริหาร</b> (Top 5 เงินเดือน, ต้นทุนรายแผนก) — HR เรียก API นี้จะได้ 403</span>
+      </div>
+      <div class="card">
+        <b><span class="chip green">EMPLOYEE</span> พนักงาน (Self-service)</b>
+        <span>HR สร้างบัญชีให้ผ่านระบบ • เห็นเฉพาะข้อมูลของตัวเอง — โปรไฟล์ ยื่นใบลา ดูสลิปเงินเดือน</span>
       </div>
     </div>
   </section>
@@ -321,7 +470,7 @@
   <section class="section slide">
     <span class="kicker">PAYROLL ENGINE</span>
     <h2>สูตรคำนวณเงินเดือน (โดยประมาณ)</h2>
-    <p class="sub">อ้างอิงหลักเกณฑ์ไทย — อยู่ใน backend/src/payroll.js</p>
+    <p class="sub">อ้างอิงหลักเกณฑ์ไทย — อยู่ใน backend/src/payroll.ts</p>
     <div class="grid g2">
       <div class="card"><b>ค่าล่วงเวลา (OT)</b><span>OT = ชม.OT × (เงินเดือน ÷ 30 ÷ 8) × 1.5<br />ชม.OT = ชั่วโมงทำงาน − 8 (หักพักเที่ยง 1 ชม.)</span></div>
       <div class="card"><b>ประกันสังคม (SSO)</b><span>SSO = min(เงินเดือน × 5%, 750 บาท/เดือน)</span></div>
@@ -335,14 +484,14 @@
   <section class="slide">
     <span class="kicker">FRONTEND UI/UX</span>
     <h2>หน้าตาและประสบการณ์ใช้งาน</h2>
-    <p class="sub">Modern UI — ใช้งานได้ทั้งเดสก์ท็อปและมือถือ</p>
+    <p class="sub">Modern UI — 12 หน้า • แยก App ของ HR/ผู้บริหาร และพนักงาน (Self-service)</p>
     <div class="grid g3">
       <div class="card"><b>รองรับ 2 ภาษา</b><span>สลับ ไทย/English ทันทีทุกหน้า (i18next) • วันที่/เงินปรับตาม locale</span></div>
-      <div class="card"><b>Dashboard + กราฟ</b><span>KPI Cards • Bar/Pie/Stacked Chart (Recharts) • รายงานผู้บริหาร</span></div>
-      <div class="card"><b>Radix UI Components</b><span>Dialog (เพิ่ม/แก้ไขพนักงาน) • Select • Tabs — เข้าถึงได้ (a11y)</span></div>
-      <div class="card"><b>Skeleton Loading</b><span>โหลดข้อมูลแบบ skeleton ไม่กระโดด layout</span></div>
-      <div class="card"><b>ปุ่มกันกดซ้ำ</b><span>ทุกปุ่ม async มี spinner + ล็อกขณะประมวลผล</span></div>
-      <div class="card"><b>อื่นๆ</b><span>รูปโปรไฟล์ mock-up อัตโนมัติ • ส่งออก CSV (รองรับภาษาไทยใน Excel) • Glassmorphism Sidebar</span></div>
+      <div class="card"><b>Dashboard + กราฟ</b><span>KPI Cards • Bar/Pie Chart (Recharts) • รายงานเฉพาะผู้บริหาร • ปฏิทินการลา</span></div>
+      <div class="card"><b>Employee Portal</b><span>พนักงานเข้าดูโปรไฟล์ / ใบลาของตัวเอง / สลิปเงินเดือนของตัวเอง</span></div>
+      <div class="card"><b>Radix UI + Skeleton</b><span>Dialog / Select / Tabs เข้าถึงได้ (a11y) • โหลดแบบ skeleton • ปุ่มกันกดซ้ำ</span></div>
+      <div class="card"><b>แจ้งเตือน</b><span>กระดิ่งแจ้งเตือนใบลาที่รออนุมัติ • ประกาศบริษัทล่าสุดบนหน้าแรก</span></div>
+      <div class="card"><b>อื่นๆ</b><span>Avatar อัตโนมัติ • ส่งออก CSV (รองรับภาษาไทยใน Excel) • Glassmorphism Sidebar</span></div>
     </div>
   </section>
 
@@ -350,14 +499,21 @@
   <section class="slide">
     <span class="kicker">SUMMARY & DEMO</span>
     <h2>สรุป & วิธีเปิดระบบสาธิต</h2>
+    <div class="stats">
+      <div class="stat"><b>12</b><span>ตารางฐานข้อมูล</span></div>
+      <div class="stat"><b>39</b><span>API Endpoints</span></div>
+      <div class="stat"><b>3</b><span>ระดับสิทธิ์ผู้ใช้</span></div>
+      <div class="stat"><b>12</b><span>หน้าจอ / 2 ภาษา</span></div>
+    </div>
     <div class="grid g2">
       <div class="card">
         <b>สิ่งที่ทำได้จากโปรเจกต์นี้</b>
         <span>
-          ✓ ออกแบบ ER Diagram 7 เอนทิตี้ + DDL ใน pgAdmin<br />
-          ✓ REST API ครบ + ระบบสมาชิก JWT + สิทธิ์ 2 ระดับ<br />
+          ✓ ออกแบบ ER Diagram 12 เอนทิตี้ + DDL ใน pgAdmin + Prisma<br />
+          ✓ REST API 39 endpoints + ระบบสมาชิก JWT + สิทธิ์ 3 ระดับ<br />
           ✓ Payroll Engine (SSO/ภาษี/OT/โบนัส)<br />
-          ✓ Frontend React 2 ภาษา + กราฟ + UI สวยทันสมัย<br />
+          ✓ โมดูลครบวงจร: ประกวดผลงาน • รับสมัครงาน • ประกาศ • Self-service<br />
+          ✓ Frontend React + TypeScript 2 ภาษา + กราฟ + UI สวยทันสมัย<br />
           ✓ ทดสอบจริงทั้งระบบ (401/403/Transaction/CASCADE)
         </span>
       </div>
