@@ -27,7 +27,6 @@ const TAX_BRACKETS: TaxBracket[] = [
   { upTo: Infinity, rate: 0.35 },
 ];
 
-// Marginal rate: the tax rate of the bracket the taxable income falls into
 function marginalRateFor(taxableIncome: number): number {
   for (const b of TAX_BRACKETS) {
     if (taxableIncome <= b.upTo) return b.rate;
@@ -71,7 +70,6 @@ export function computeMonthlyPayroll({ salary, otHours = 0, annualBonus = 0 }: 
   const otPay = round2(otHours * hourlyRate * OT_MULTIPLIER);
   const sso = round2(Math.min(salary * SSO_RATE, SSO_MAX));
 
-  // Regular income (salary + OT) taxed via annual progressive brackets
   const annualRegular = salary * 12 + otPay * 12;
   const expenseDeduction = Math.min(annualRegular * 0.5, 100000);
   const personalAllowance = 60000;
@@ -81,7 +79,6 @@ export function computeMonthlyPayroll({ salary, otHours = 0, annualBonus = 0 }: 
   );
   const regularMonthlyTax = annualIncomeTax(taxableRegular) / 12;
 
-  // Bonus is withheld once, in the month it is paid, at the marginal rate
   const bonusTax = Math.round(annualBonus * marginalRateFor(taxableRegular));
 
   const tax = round2(regularMonthlyTax + bonusTax);
