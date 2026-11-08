@@ -1,3 +1,6 @@
+// ==============================
+// การ์ดประกาศ — แสดงประกาศล่าสุด (สูงสุด 4 รายการ) พร้อมปุ่มเพิ่ม/ลบ สำหรับ HR และ Executive
+// ==============================
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,13 +15,16 @@ import { useAuth } from '../context/AuthContext';
 const inputCls =
   'mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-azure-500 focus:outline-none focus:ring-2 focus:ring-azure-500/30';
 
+/** Dialog ฟอร์มสร้างประกาศใหม่ — validate ด้วย zod แล้วส่งไป API, ปิดเมื่อสำเร็จ */
 function AnnouncementFormDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { t } = useTranslation();
+  // ส่วน state ของฟอร์ม (หัวข้อ, เนื้อหา, error, สถานะบันทึก)
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // ส่วน event handler: ตรวจฟอร์มแล้วบันทึกประกาศ
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const parsed = announcementFormSchema.safeParse({ title, body });
@@ -79,14 +85,17 @@ function AnnouncementFormDialog({ onClose, onCreated }: { onClose: () => void; o
   );
 }
 
+/** การ์ดประกาศบน dashboard — โหลดรายการล่าสุด, เพิ่ม/ลบได้ (เฉพาะ HR/Executive) */
 export default function AnnouncementsCard() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  // เฉพาะ HR/Executive เท่านั้นที่โพสต์/ลบประกาศได้
   const canPost = user?.role === 'hr' || user?.role === 'executive';
   const [items, setItems] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // ส่วนดึงข้อมูล: โหลดประกาศทั้งหมด (ถ้าพลาดแสดงเป็นชุดว่าง)
   const load = useCallback(() => {
     setLoading(true);
     api
@@ -100,6 +109,7 @@ export default function AnnouncementsCard() {
     load();
   }, [load]);
 
+  // ลบประกาศ (มี confirm) แล้วโหลดรายการใหม่
   const remove = async (id: number) => {
     if (!window.confirm(t('announcements.deleteConfirm'))) return;
     try {
@@ -112,6 +122,7 @@ export default function AnnouncementsCard() {
 
   return (
     <div className="card-lift rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      {/* ส่วนหัวการ์ด + ปุ่มเพิ่มประกาศ (เฉพาะผู้มีสิทธิ์) */}
       <div className="mb-4 flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <Megaphone className="h-4 w-4 text-azure-600" />
@@ -129,14 +140,17 @@ export default function AnnouncementsCard() {
         )}
       </div>
 
+      {/* skeleton ขณะโหลด */}
       {loading && <div className="space-y-3">
         {[0, 1].map((i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-slate-100" />)}
       </div>}
 
+      {/* กรณีไม่มีประกาศ */}
       {!loading && items.length === 0 && (
         <p className="rounded-lg bg-slate-50 px-3 py-6 text-center text-sm text-slate-400">{t('announcements.empty')}</p>
       )}
 
+      {/* ส่วนรายการประกาศ 4 รายการล่าสุด */}
       <div className="space-y-3">
         {items.slice(0, 4).map((a) => (
           <div key={a.announcement_id} className="group rounded-xl border border-slate-100 bg-slate-50/60 p-3.5">
@@ -161,6 +175,7 @@ export default function AnnouncementsCard() {
         ))}
       </div>
 
+      {/* เปิด dialog สร้างประกาศ */}
       {dialogOpen && <AnnouncementFormDialog onClose={() => setDialogOpen(false)} onCreated={load} />}
     </div>
   );

@@ -1,3 +1,6 @@
+// ==============================
+// Dialog เพิ่ม/แก้ไขข้อมูลพนักงาน — ฟอร์มครบทุก field พร้อม validate ด้วย zod (employeeFormSchema)
+// ==============================
 import { useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +25,7 @@ interface EmployeeForm {
   status: EmployeeStatus;
 }
 
+// ค่าเริ่มต้นของฟอร์มพนักงานใหม่ (โควตาลาเริ่มที่ 10 วัน, สถานะ active)
 const EMPTY: EmployeeForm = {
   first_name: '',
   last_name: '',
@@ -47,14 +51,17 @@ interface EmployeeDialogProps {
   employee?: Employee | null;
 }
 
+/** Dialog เพิ่ม/แก้ไขพนักงาน — ถ้าส่ง employee มาคือโหมดแก้ไข, ไม่ส่งคือเพิ่มใหม่ */
 export default function EmployeeDialog({ open, onOpenChange, onSaved, employee = null }: EmployeeDialogProps) {
   const { t } = useTranslation();
+  // ส่วน state: รายการแผนก, ค่าฟอร์ม, error, สถานะบันทึก
   const [departments, setDepartments] = useState<Department[]>([]);
   const [form, setForm] = useState<EmployeeForm>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const editing = Boolean(employee);
 
+  // ส่วนดึงข้อมูล: เมื่อเปิด dialog ให้โหลดแผนก + รีเซ็ตฟอร์มจากข้อมูลพนักงาน (โหมดแก้ไข)
   useEffect(() => {
     if (open) {
       api.getDepartments().then(setDepartments).catch(() => setDepartments([]));
@@ -78,11 +85,13 @@ export default function EmployeeDialog({ open, onOpenChange, onSaved, employee =
     }
   }, [open, employee]);
 
+  // ส่วน event handlers: ผูก input กับ state และ submit ฟอร์ม
   const set = (key: keyof EmployeeForm) => (e: ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    // ตรวจฟอร์มด้วย zod ก่อน — ไม่ผ่านแสดง error ข้อแรก
     const parsed = employeeFormSchema.safeParse(form);
     if (!parsed.success) {
       setError(firstIssueMessage(parsed.error));
@@ -123,7 +132,9 @@ export default function EmployeeDialog({ open, onOpenChange, onSaved, employee =
             {t('employees.subtitle')}
           </Dialog.Description>
 
+          {/* ส่วนฟอร์มกรอกข้อมูล */}
           <form onSubmit={submit} className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* ชื่อ-นามสกุล */}
             <label className="block text-sm">
               <span className="font-medium text-slate-700">{t('employees.firstName')} *</span>
               <input required value={form.first_name} onChange={set('first_name')} className={inputCls} />
@@ -132,6 +143,7 @@ export default function EmployeeDialog({ open, onOpenChange, onSaved, employee =
               <span className="font-medium text-slate-700">{t('employees.lastName')} *</span>
               <input required value={form.last_name} onChange={set('last_name')} className={inputCls} />
             </label>
+            {/* อีเมล / เบอร์โทร */}
             <label className="block text-sm">
               <span className="font-medium text-slate-700">{t('employees.email')} *</span>
               <input required type="email" value={form.email} onChange={set('email')} className={inputCls} />
@@ -140,6 +152,7 @@ export default function EmployeeDialog({ open, onOpenChange, onSaved, employee =
               <span className="font-medium text-slate-700">{t('employees.phone')}</span>
               <input value={form.phone} onChange={set('phone')} className={inputCls} />
             </label>
+            {/* ตำแหน่ง + แผนก (dropdown) */}
             <label className="block text-sm">
               <span className="font-medium text-slate-700">{t('employees.position')} *</span>
               <input required value={form.position} onChange={set('position')} className={inputCls} />
@@ -175,6 +188,7 @@ export default function EmployeeDialog({ open, onOpenChange, onSaved, employee =
                 </Select.Portal>
               </Select.Root>
             </label>
+            {/* วันเริ่มงาน / เงินเดือน / โควตาลา */}
             <label className="block text-sm">
               <span className="font-medium text-slate-700">{t('employees.hireDate')}</span>
               <input type="date" value={form.hire_date} onChange={set('hire_date')} className={inputCls} />
@@ -187,6 +201,7 @@ export default function EmployeeDialog({ open, onOpenChange, onSaved, employee =
               <span className="font-medium text-slate-700">{t('employees.leaveQuota')}</span>
               <input type="number" min="0" max="365" value={form.annual_leave_quota} onChange={set('annual_leave_quota')} className={inputCls} />
             </label>
+            {/* สถานะพนักงาน — แสดงเฉพาะโหมดแก้ไข */}
             {editing && (
               <label className="block text-sm">
                 <span className="font-medium text-slate-700">{t('common.status')}</span>
@@ -221,6 +236,7 @@ export default function EmployeeDialog({ open, onOpenChange, onSaved, employee =
               </label>
             )}
 
+            {/* แสดงข้อผิดพลาด + ปุ่มยกเลิก/บันทึก */}
             {error && (
               <p className="sm:col-span-2 banner-in rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
             )}

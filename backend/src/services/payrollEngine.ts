@@ -1,11 +1,12 @@
-// Thai payroll calculation (simplified estimate)
-// - SSO: 5% of salary, capped at 750 THB/month
-// - OT: hourly rate = salary / 30 / 8, paid at 1.5x
-// - Tax: monthly withholding from Thai progressive brackets, using
-//   50% expense deduction (max 100,000), 60,000 personal allowance,
-//   and SSO contributions as deductions. Annual bonus is withheld once
-//   (in the month paid) at the employee's marginal rate.
-//   This is an ESTIMATE, not official RD calculation.
+// ============================================================
+// เครื่องคำนวณเงินเดือนตามหลักเกณฑ์ไทย (ประมาณการ ไม่ใช่แบบ ภ.ษ.)
+// - SSO: หัก 5% ของเงินเดือน ไม่เกิน 750 บาท/เดือน
+// - OT: อัตราต่อชั่วโมง = เงินเดือน ÷ 30 ÷ 8 คูณ 1.5 เท่า
+// - ภาษีหัก ณ ที่จ่าย: ขั้นบันได 0-35% จากรายได้ต่อปี
+//   หักค่าใช้จ่าย 50% (สูงสุดแสน) + ลดหย่อนส่วนตัว 60,000 + เบี้ย SSO รายปี
+// - โบนัสสิ้นปี: หักภาษีครั้งเดียวเดือนที่จ่าย ที่อัตราขอบขั้น (marginal rate)
+// เป็น pure function ทั้งหมด — ไม่ต้องต่อ DB จึงทดสอบง่าย
+// ============================================================
 
 export const SSO_RATE = 0.05;
 export const SSO_MAX = 750;

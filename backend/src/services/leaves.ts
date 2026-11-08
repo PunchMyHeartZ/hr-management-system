@@ -1,6 +1,11 @@
+// ============================================================
+// บริการจัดการการลา — รายการใบลา / ยื่นใหม่ / อนุมัติ-ปฏิเสธ
+// จำนวนวันลา (total_days) คิดใน SQL ตรงๆ: end_date - start_date + 1
+// ============================================================
 import { pool, pgErrorCode } from '../db';
 import { ServiceError } from './errors';
 
+/** ใบลาพร้อมชื่อพนักงาน (JOIN) และจำนวนวันรวมที่ DB คำนวณให้ */
 export interface LeaveRecord {
   leave_id: number;
   employee_id: number;
@@ -31,6 +36,7 @@ export interface CreatedLeave {
   status: string;
 }
 
+/** รายการใบลา — scope = รหัสพนักงานจะเห็นเฉพาะของตัวเอง, null = เห็นทั้งหมด (ใหม่สุดก่อน) */
 export async function listLeaves(scope: number | null): Promise<LeaveRecord[]> {
   const { rows } = await pool.query<LeaveRecord>(`
     SELECT  l.leave_id,
@@ -50,6 +56,7 @@ export async function listLeaves(scope: number | null): Promise<LeaveRecord[]> {
   return rows;
 }
 
+/** ยื่นใบลาใหม่ (สถานะเริ่มต้น pending) — รหัสพนักงานไม่มีจริงโยน 400 */
 export async function createLeave(body: LeaveInput): Promise<CreatedLeave> {
   try {
     const { rows } = await pool.query<CreatedLeave>(
@@ -67,6 +74,7 @@ export async function createLeave(body: LeaveInput): Promise<CreatedLeave> {
   }
 }
 
+/** อนุมัติ/ปฏิเสธใบลา — ไม่เจอใบลานี้โยน 404 */
 export async function setLeaveStatus(id: number, status: 'approved' | 'rejected'): Promise<{ leave_id: number; status: string }> {
   const { rows } = await pool.query<{ leave_id: number; status: string }>(
     'UPDATE leave_requests SET status = $1 WHERE leave_id = $2 RETURNING leave_id, status',

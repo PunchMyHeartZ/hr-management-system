@@ -1,3 +1,6 @@
+// ==============================
+// หน้าจ่ายเงินเดือน (payroll) — เลือกเดือน, สร้างรายการจ่าย, แก้โบนัสย่อหน้า, export CSV และดูสลิป
+// ==============================
 import { useCallback, useEffect, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +14,7 @@ import PayslipDialog from '../components/PayslipDialog';
 import { Inbox, Printer } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+/** เซลล์แก้ไขโบนัสในตาราง — กรอกจำนวนแล้วกด save (หรือ Enter) เพื่อบันทึกโบนัสรายปีของพนักงาน */
 function BonusCell({
   record,
   year,
@@ -21,14 +25,17 @@ function BonusCell({
   onSaved: () => Promise<void> | void;
 }) {
   const { t } = useTranslation();
+  // ส่วน state: ค่าโบนัสใน input, สถานะบันทึก, error
   const [value, setValue] = useState(String(Number(record.bonus)));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ซิงก์ input ให้ตรงข้อมูลใหม่เมื่อตารางโหลดใหม่
   useEffect(() => {
     setValue(String(Number(record.bonus)));
   }, [record.bonus]);
 
+  // บันทึกโบนัส (ถ้ากรอกค่าไม่ใช่ตัวเลขให้ถือเป็น 0)
   const save = async () => {
     setSaving(true);
     setError(null);
@@ -70,11 +77,13 @@ function BonusCell({
   );
 }
 
+/** หน้า payroll — แสดงตารางเงินเดือนรายเดือน พร้อมแถวรวม (tfoot) และปุ่มสั่งพิมพ์สลิป */
 export default function PayrollPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const canEdit = ['hr', 'executive'].includes(user?.role ?? '');
   const now = new Date();
+  // ส่วน state: เดือนที่เลือก (YYYY-MM เริ่มที่เดือนปัจจุบัน), แถวข้อมูล, สถานะต่าง ๆ, สลิปที่เปิดดู
   const [monthValue, setMonthValue] = useState(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   );
@@ -85,10 +94,12 @@ export default function PayrollPage() {
   const [payslip, setPayslip] = useState<PayrollRecord | null>(null);
 
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
+  // แยกค่า month input "YYYY-MM" เป็นตัวเลขปี/เดือน
   const [yearStr, monthStr] = monthValue.split('-');
   const year = Number(yearStr);
   const month = Number(monthStr);
 
+  // ส่วนดึงข้อมูล: โหลด payroll ตามปี/เดือนที่เลือก
   const load = useCallback(async () => {
     if (!year || !month) return;
     setLoading(true);
@@ -106,6 +117,7 @@ export default function PayrollPage() {
     load();
   }, [load]);
 
+  // สั่งระบบคำนวณ/สร้างรายการ payroll ของเดือนที่เลือกใหม่ทั้งหมด
   const generate = async () => {
     setLoading(true);
     setError(null);
@@ -120,6 +132,7 @@ export default function PayrollPage() {
     }
   };
 
+  // ส่วน export CSV: ห่อค่าด้วย double quote (escape ตัว " เป็น "") ป้องกันปัญหา comma ในข้อมูล
   const exportCsv = () => {
     const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const header = ['Employee', 'Base Salary', 'OT Hours', 'OT Pay', 'Bonus', 'SSO', 'Tax', 'Net Pay'];
@@ -128,8 +141,10 @@ export default function PayrollPage() {
         .map(esc)
         .join(',')
     );
+    // นำหน้าด้วย BOM (\uFEFF) เพื่อให้ Excel เปิดไฟล์ UTF-8 แล้วอ่านภาษาไทยได้ถูกต้อง
     const csv = '\uFEFF' + [header.map(esc).join(','), ...lines].join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    // สร้างลิงก์ดาวน์โหลดชั่วคราวแล้วคลิกอัตโนมัติ
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -138,6 +153,7 @@ export default function PayrollPage() {
     URL.revokeObjectURL(url);
   };
 
+  // รวมยอดทุกคอลัมน์สำหรับแถว total (tfoot)
   const totals = rows.reduce(
     (acc, r) => ({
       base: acc.base + Number(r.base_salary),
@@ -152,6 +168,7 @@ export default function PayrollPage() {
 
   return (
     <section>
+      {/* ส่วนหัวหน้า: เลือกเดือน + ปุ่มสร้าง payroll/export CSV (เฉพาะผู้มีสิทธิ์) */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">{t('payroll.title')}</h2>
@@ -207,6 +224,7 @@ export default function PayrollPage() {
 
       {loading && rows.length === 0 && <SkeletonTable rows={4} cols={8} />}
 
+      {/* ส่วนแสดงตาราง payroll (หรี่ลงระหว่างโหลด) */}
       {(rows.length > 0 || !loading) && (
         <div
           className={`overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm transition ${
@@ -252,6 +270,7 @@ export default function PayrollPage() {
                   <td className="whitespace-nowrap px-4 py-3 text-amber-700">
                     {formatMoney(r.ot_pay, locale)}
                   </td>
+                  {/* คอลัมน์โบนัส: HR แก้ได้ผ่าน BonusCell, พนักงานเห็นเป็นตัวเลขอย่างเดียว */}
                   <td className="px-4 py-3">
                     {canEdit ? (
                       <BonusCell record={r} year={year} onSaved={generate} />

@@ -1,3 +1,6 @@
+// ============================================================
+// /api/announcements — ประกาศบริษัท (อ่านทุกคน / โพสต์+ลบ เป็น HR และผู้บริหาร)
+// ============================================================
 import express from 'express';
 import { z } from 'zod';
 import type { Request, Response } from 'express';

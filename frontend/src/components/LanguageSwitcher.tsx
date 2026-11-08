@@ -1,8 +1,12 @@
+// ==============================
+// ปุ่มสลับภาษา ไทย/อังกฤษ — เปลี่ยนค่า i18n และจำไว้ใน localStorage
+// ==============================
 import { useTranslation } from 'react-i18next';
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
+  // เปลี่ยนภาษา + จำการเลือกไว้ใน localStorage + ตั้ง lang ของ <html> เพื่อ accessibility
   const change = (lng: string) => {
     i18n.changeLanguage(lng);
     localStorage.setItem('lang', lng);

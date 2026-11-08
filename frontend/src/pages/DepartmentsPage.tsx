@@ -1,3 +1,6 @@
+// ==============================
+// หน้าจัดการแผนก — การ์ดแผนกพร้อมจำนวนพนักงาน + dialog เพิ่ม/แก้ไข/ลบ
+// ==============================
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,13 +21,16 @@ interface DeptDialogProps {
   onSaved: () => void;
 }
 
+/** Dialog เพิ่ม/แก้ไขแผนก — ถ้าส่ง department มาคือโหมดแก้ไข */
 function DeptDialog({ department, onClose, onSaved }: DeptDialogProps) {
   const { t } = useTranslation();
+  // ส่วน state ของฟอร์ม (ชื่อแผนก, รหัสแผนก)
   const [name, setName] = useState(department?.department_name ?? '');
   const [code, setCode] = useState(department?.department_code ?? '');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // ส่วน submit: validate ด้วย zod แล้วสร้างหรืออัปเดตแผนก
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const parsed = departmentFormSchema.safeParse({ department_name: name, department_code: code });
@@ -84,8 +90,10 @@ function DeptDialog({ department, onClose, onSaved }: DeptDialogProps) {
   );
 }
 
+/** หน้ารายการแผนก — โหลดแผนก + นับจำนวนพนักงานต่อแผนก แล้วแสดงเป็นการ์ดกริด */
 export default function DepartmentsPage() {
   const { t } = useTranslation();
+  // ส่วน state: แผนก, จำนวนพนักงานแต่ละแผนก (Map), สถานะโหลด, dialog
   const [departments, setDepartments] = useState<Department[]>([]);
   const [counts, setCounts] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -93,6 +101,7 @@ export default function DepartmentsPage() {
   const [dialogDept, setDialogDept] = useState<Department | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // ส่วนดึงข้อมูล: โหลดแผนก + พนักงาน แล้วนับจำนวนคนต่อแผนก
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -113,6 +122,7 @@ export default function DepartmentsPage() {
     load();
   }, [load]);
 
+  // ลบแผนก (มี confirm) แล้วโหลดรายการใหม่
   const remove = async (dept: Department) => {
     if (!window.confirm(t('departments.deleteConfirm'))) return;
     try {
@@ -125,6 +135,7 @@ export default function DepartmentsPage() {
 
   return (
     <section>
+      {/* ส่วนหัวหน้า + ปุ่มเพิ่มแผนก */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">{t('departments.title')}</h2>
@@ -149,6 +160,7 @@ export default function DepartmentsPage() {
         </p>
       )}
 
+      {/* ส่วนแสดงการ์ดแผนก (ชื่อ, รหัส, จำนวนคน, ปุ่มแก้ไข/ลบ) */}
       {!loading && !error && (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {departments.map((d) => (

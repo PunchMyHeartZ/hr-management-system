@@ -1,3 +1,6 @@
+// ==============================
+// หน้าโปรไฟล์พนักงาน — ข้อมูลส่วนตัว, สถิติสำคัญ และแท็บประวัติ (การลา/เวลาทำงาน/payroll/ประเมิน)
+// ==============================
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Tabs from '@radix-ui/react-tabs';
@@ -22,13 +25,16 @@ import { useNav } from '../context/NavContext';
 const inputCls =
   'mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-azure-500 focus:outline-none focus:ring-2 focus:ring-azure-500/30';
 
+/** Dialog สร้างบัญชี login ให้พนักงาน (username/password) — ใช้โดย HR */
 function AccountDialog({ employeeId, onClose, onCreated }: { employeeId: number; onClose: () => void; onCreated: () => void }) {
   const { t } = useTranslation();
+  // ส่วน state ของฟอร์มบัญชี
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // ส่วน submit: validate ด้วย zod แล้วสร้างบัญชีผ่าน API
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = accountFormSchema.safeParse({ username, password });
@@ -83,6 +89,10 @@ function AccountDialog({ employeeId, onClose, onCreated }: { employeeId: number;
   );
 }
 
+/**
+ * หน้าโปรไฟล์พนักงาน
+ * @param employeeId id ของพนักงานที่จะแสดง (null = รอการเลือก เช่น พนักงานที่ยังไม่ผูกบัญชี)
+ */
 export default function EmployeeProfilePage({ employeeId }: { employeeId: number | null }) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -90,6 +100,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
   const isHR = user?.role === 'hr' || user?.role === 'executive';
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
 
+  // ส่วน state: ข้อมูลพนักงาน + ประวัติทั้ง 4 ประเภท + สถานะ dialog/สลิป
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -101,6 +112,8 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
   const [accountOpen, setAccountOpen] = useState(false);
   const [payslip, setPayslip] = useState<PayrollRecord | null>(null);
 
+  // ส่วนดึงข้อมูล: โหลดข้อมูลพนักงาน + การลา/เวลาทำงาน/ประเมิน พร้อมกัน
+  // และวนดึง payroll ย้อนหลัง 6 เดือนล่าสุด (แต่ละเดือนเป็นคำขอแยกกัน)
   const load = useCallback(async () => {
     if (!employeeId) return;
     setLoading(true);
@@ -116,6 +129,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
       setLeaves(lv);
       setAttendance(att);
       setReviews(rv);
+      // วนย้อนหลัง 6 เดือน (เดือนปัจจุบันถึง 5 เดือนก่อน) เก็บทุกแถว payroll ที่เจอ
       const now = new Date();
       const months: PayrollRecord[] = [];
       for (let i = 0; i < 6; i += 1) {
@@ -156,10 +170,12 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
     );
   }
 
+  // วันลาคงเหลือ = โควตา - ที่ใช้ไป
   const remaining = Number(employee.annual_leave_quota) - Number(employee.used_leave_days);
 
   return (
     <section>
+      {/* ปุ่มกลับไปรายชื่อพนักงาน (เฉพาะ HR) */}
       {isHR && (
         <button
           type="button"
@@ -171,6 +187,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
         </button>
       )}
 
+      {/* การ์ดหัวโปรไฟล์: avatar, ชื่อ, ตำแหน่ง, ติดต่อ + ปุ่มสร้างบัญชี/แก้ไข (HR) */}
       <div className="card-lift rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -203,6 +220,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
           )}
         </div>
 
+        {/* สถิติสำคัญ 4 ช่อง: วันเริ่มงาน, เงินเดือน, เงินเดือนรายปี (x12), โควตาการลา */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl bg-slate-50 p-4">
             <div className="text-xs font-medium text-slate-500">{t('profile.hireDate')}</div>
@@ -225,6 +243,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
         </div>
       </div>
 
+      {/* ส่วนแท็บประวัติ: การลา / เวลาทำงาน / payroll / ประเมินผล */}
       <Tabs.Root defaultValue="leaves" className="mt-6">
         <Tabs.List className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
           {[
@@ -243,6 +262,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
           ))}
         </Tabs.List>
 
+        {/* แท็บที่ 1: ประวัติการลา */}
         <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <Tabs.Content value="leaves">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -274,6 +294,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
             </table>
           </Tabs.Content>
 
+          {/* แท็บที่ 2: ประวัติเวลาทำงาน */}
           <Tabs.Content value="attendance">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -302,6 +323,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
             </table>
           </Tabs.Content>
 
+          {/* แท็บที่ 3: payroll 6 เดือนล่าสุด + ปุ่มดูสลิป */}
           <Tabs.Content value="payroll">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -347,6 +369,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
             </table>
           </Tabs.Content>
 
+          {/* แท็บที่ 4: ผลการประเมิน */}
           <Tabs.Content value="reviews">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
               <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -385,6 +408,7 @@ export default function EmployeeProfilePage({ employeeId }: { employeeId: number
         </div>
       </Tabs.Root>
 
+      {/* dialogs: แก้ไขข้อมูล, สร้างบัญชี, ดูสลิป */}
       {editOpen && (
         <EmployeeDialog
           open={editOpen}

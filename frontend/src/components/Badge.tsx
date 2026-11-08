@@ -1,5 +1,9 @@
+// ==============================
+// Badge สถานะ — ป้ายวงกลมเล็ก ๆ แสดงสถานะ (active/pending/approved/...) พร้อมสีตามสถานะ
+// ==============================
 import { useTranslation } from 'react-i18next';
 
+// จับคูสี (พื้นหลัง/ตัวอักษร/ring) ตามสถานะ
 const STYLES: Record<string, string> = {
   active: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
   approved: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
@@ -9,6 +13,7 @@ const STYLES: Record<string, string> = {
   terminated: 'bg-red-50 text-red-700 ring-red-600/20',
 };
 
+// key ของคำแปล (i18n) สำหรับแต่ละสถานะ
 const LABEL_KEYS: Record<string, string> = {
   active: 'employees.status.active',
   inactive: 'employees.status.inactive',
@@ -18,6 +23,7 @@ const LABEL_KEYS: Record<string, string> = {
   rejected: 'leaves.status.rejected',
 };
 
+/** ป้ายสถานะ — รับ status string แล้วแสดงสี+ข้อความที่แปลแล้ว (fallback เป็นสีเทา/inactive) */
 export default function Badge({ status }: { status: string }) {
   const { t } = useTranslation();
   return (

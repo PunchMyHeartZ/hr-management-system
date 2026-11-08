@@ -1,3 +1,6 @@
+// ==============================
+// ปฏิทินการลา — เดือนละหน้า แสดงใครลาวันไหน แยกสีตามประเภทการลา (ไม่รวมที่ถูกปฏิเสธ)
+// ==============================
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -6,6 +9,7 @@ import type { LeaveRequest } from '../api/schemas';
 import { SkeletonTable } from '../components/Skeleton';
 import Avatar from '../components/Avatar';
 
+// สีป้ายการลาตามประเภท (annual/sick/personal/unpaid)
 const TYPE_COLORS: Record<string, string> = {
   annual: 'bg-azure-50 text-azure-700',
   sick: 'bg-rose-50 text-rose-700',
@@ -13,20 +17,24 @@ const TYPE_COLORS: Record<string, string> = {
   unpaid: 'bg-amber-50 text-amber-700',
 };
 
+/** แปลง Date เป็น key รูปแบบ YYYY-MM-DD (เติม 0 ข้างหน้า) สำหรับ index ในปฏิทิน */
 function toDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** หน้าปฏิทินการลา — เลื่อนดูเดือนก่อนหน้า/ถัดไป และไฮไลต์วันปัจจุบัน */
 export default function LeaveCalendarPage() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
   const today = new Date();
+  // ส่วน state: เดือน/ปีที่แสดง, รายการลา, สถานะโหลด
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // ส่วนดึงข้อมูล: โหลดคำขอลาทั้งหมด (ครั้งเดียว)
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -37,6 +45,7 @@ export default function LeaveCalendarPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // สร้าง index แผนที่ "วัน -> รายการลา" โดยขยายช่วง start-end เป็นรายวัน (ข้ามใบที่ถูกปฏิเสธ)
   const byDay = useMemo(() => {
     const map = new Map<string, LeaveRequest[]>();
     for (const l of leaves) {
@@ -51,7 +60,9 @@ export default function LeaveCalendarPage() {
     return map;
   }, [leaves]);
 
+  // คำนวณตารางเดือน: วันแรกตรง weekday ไหน (ช่องว่างนำหน้า = null) และเติมช่องท้ายให้ครบสัปดาห์
   const firstDay = new Date(year, month, 1);
+  // เคล็ดลับ: new Date(year, month+1, 0) = วันสุดท้ายของเดือน
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const startWeekday = firstDay.getDay();
   const cells: (number | null)[] = [
@@ -61,6 +72,7 @@ export default function LeaveCalendarPage() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   const monthTitle = firstDay.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  // เลื่อนเดือน +/- 1 (จัดการข้ามปีให้เองผ่าน Date constructor)
   const shift = (delta: number) => {
     const next = new Date(year, month + delta, 1);
     setYear(next.getFullYear());
@@ -70,6 +82,7 @@ export default function LeaveCalendarPage() {
 
   return (
     <section>
+      {/* ส่วนหัวหน้า: ชื่อเดือน + ปุ่มเลื่อนเดือนก่อนหน้า/ถัดไป */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">{t('calendar.title')}</h2>
@@ -99,8 +112,10 @@ export default function LeaveCalendarPage() {
       {loading && <SkeletonTable rows={5} cols={7} />}
       {error && <p className="banner-in rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{t('common.error')}: {error}</p>}
 
+      {/* ส่วนแสดงตารางปฏิทิน: แถวหัวชื่อวัน + เซลล์วันที่ */}
       {!loading && !error && (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          {/* แถวหัว: ชื่อวัน (อา-ส) */}
           <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
             {(t('calendar.weekdays', { returnObjects: true }) as string[]).map((wd, i) => (
               <div key={i} className="px-2 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -108,6 +123,7 @@ export default function LeaveCalendarPage() {
               </div>
             ))}
           </div>
+          {/* เซลล์แต่ละวัน: ไฮไลต์วันนี้ และแสดงรายการลาสูงสุด 3 รายการต่อวัน */}
           <div className="grid grid-cols-7">
             {cells.map((day, i) => {
               const key = day ? toDateKey(new Date(year, month, day)) : null;

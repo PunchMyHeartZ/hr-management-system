@@ -1,3 +1,6 @@
+// ==============================
+// หน้าการสรรหาบุคลากร — สองแท็บ: ตำแหน่งที่รับสมัคร (การ์ด) และผู้สมัคร (ตาราง + เปลี่ยนสถานะ)
+// ==============================
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +18,10 @@ import { formatDate } from '../lib/format';
 const inputCls =
   'mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-azure-500 focus:outline-none focus:ring-2 focus:ring-azure-500/30';
 
+// ลำดับขั้นสถานะผู้สมัคร: สมัคร -> คัดกรอง -> สัมภาษณ์ -> เสนองาน -> รับ/ปฏิเสธ
 const APPLICANT_STATUSES: ApplicantStatus[] = ['applied', 'screening', 'interview', 'offer', 'hired', 'rejected'];
 
+// สีป้ายสถานะผู้สมัคร + สถานะตำแหน่ง (open/closed)
 const STATUS_STYLES: Record<string, string> = {
   applied: 'bg-slate-100 text-slate-700',
   screening: 'bg-sky-50 text-sky-700',
@@ -28,6 +33,7 @@ const STATUS_STYLES: Record<string, string> = {
   closed: 'bg-slate-100 text-slate-500',
 };
 
+/** Dialog เพิ่ม/แก้ไขตำแหน่งงาน — ชื่อ, แผนก, จำนวนที่รับ, รายละเอียด, สถานะเปิด/ปิด */
 function PositionDialog({
   position,
   departments,
@@ -40,6 +46,7 @@ function PositionDialog({
   onSaved: () => void;
 }) {
   const { t } = useTranslation();
+  // ส่วน state ของฟอร์มตำแหน่ง
   const [title, setTitle] = useState(position?.title ?? '');
   const [departmentId, setDepartmentId] = useState(position?.department_id ? String(position.department_id) : '');
   const [description, setDescription] = useState(position?.description ?? '');
@@ -48,6 +55,7 @@ function PositionDialog({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // ส่วน submit: validate ด้วย zod แล้วสร้าง/อัปเดตตำแหน่ง
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const parsed = positionFormSchema.safeParse({
@@ -163,6 +171,7 @@ function PositionDialog({
   );
 }
 
+/** Dialog เพิ่มผู้สมัครใหม่ — เลือกตำแหน่งที่สมัคร + ข้อมูลติดต่อ */
 function ApplicantDialog({
   positions,
   onClose,
@@ -173,6 +182,7 @@ function ApplicantDialog({
   onSaved: () => void;
 }) {
   const { t } = useTranslation();
+  // ส่วน state ของฟอร์มผู้สมัคร
   const [positionId, setPositionId] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -181,6 +191,7 @@ function ApplicantDialog({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // ส่วน submit: validate แล้วบันทึกผู้สมัครใหม่
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const parsed = applicantFormSchema.safeParse({ position_id: positionId, full_name: fullName, email, phone, notes });
@@ -269,9 +280,11 @@ function ApplicantDialog({
   );
 }
 
+/** หน้า recruitment — โหลดตำแหน่ง/ผู้สมัคร/แผนก แล้วแสดงเป็นสองแท็บ */
 export default function RecruitmentPage() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
+  // ส่วน state: ตำแหน่ง, ผู้สมัคร, แผนก, สถานะโหลด, dialogs
   const [positions, setPositions] = useState<JobPosition[]>([]);
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -280,6 +293,7 @@ export default function RecruitmentPage() {
   const [positionDialog, setPositionDialog] = useState<{ open: boolean; position: JobPosition | null }>({ open: false, position: null });
   const [applicantDialog, setApplicantDialog] = useState(false);
 
+  // ส่วนดึงข้อมูล: โหลดตำแหน่ง + ผู้สมัคร + แผนกพร้อมกัน
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -299,6 +313,7 @@ export default function RecruitmentPage() {
     load();
   }, [load]);
 
+  // ลบตำแหน่ง (มี confirm)
   const removePosition = async (position: JobPosition) => {
     if (!window.confirm(t('recruitment.deleteConfirm'))) return;
     try {
@@ -309,6 +324,7 @@ export default function RecruitmentPage() {
     }
   };
 
+  // ย้ายผู้สมัครไปขั้นถัดไป (เปลี่ยนสถานะ) แล้วโหลดใหม่
   const moveApplicant = async (applicant: Applicant, status: ApplicantStatus) => {
     try {
       await api.updateApplicantStatus(applicant.applicant_id, status);
@@ -318,11 +334,13 @@ export default function RecruitmentPage() {
     }
   };
 
+  // ส่วนแสดงผล: skeleton ระหว่างโหลด / error
   if (loading) return <SkeletonTable rows={5} cols={6} />;
   if (error) return <p className="banner-in rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{t('common.error')}: {error}</p>;
 
   return (
     <section>
+      {/* ส่วนหัวหน้า */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">{t('recruitment.title')}</h2>
@@ -330,6 +348,7 @@ export default function RecruitmentPage() {
         </div>
       </div>
 
+      {/* แท็บหลัก: ตำแหน่งงาน / ผู้สมัคร */}
       <Tabs.Root defaultValue="positions">
         <Tabs.List className="mb-4 flex gap-1 rounded-xl bg-slate-100 p-1">
           {[
@@ -346,6 +365,7 @@ export default function RecruitmentPage() {
           ))}
         </Tabs.List>
 
+        {/* แท็บที่ 1: การ์ดตำแหน่งงานที่เปิดรับ */}
         <Tabs.Content value="positions">
           <div className="mb-4 flex justify-end">
             <button
@@ -404,6 +424,7 @@ export default function RecruitmentPage() {
           </div>
         </Tabs.Content>
 
+        {/* แท็บที่ 2: ตารางผู้สมัคร + dropdown ย้ายสถานะ */}
         <Tabs.Content value="applicants">
           <div className="mb-4 flex justify-end">
             <button type="button" onClick={() => setApplicantDialog(true)} className={btnPrimary}>

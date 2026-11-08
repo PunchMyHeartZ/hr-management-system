@@ -1,3 +1,8 @@
+// ============================================================
+// บริการรับสมัครงาน — ตำแหน่งเปิดรับ (positions) + ผู้สมัคร (applicants)
+// pipeline ผู้สมัคร: applied → screening → interview → offer → hired/rejected
+// กติกา: ลบตำแหน่งไม่ได้ถ้ายังมีผู้สมัครอยู่ (โยน 409)
+// ============================================================
 import { pool, pgErrorCode } from '../db';
 import { ServiceError } from './errors';
 
@@ -57,6 +62,7 @@ const SELECT_APPLICANTS = `
   JOIN positions p ON p.position_id = a.position_id
 `;
 
+/** ตำแหน่งเปิดรับ พร้อมนับผู้สมัครว่ามีกี่คนแล้ว (subquery ใน SELECT) — เปิดอยู่ก่อน */
 export async function listPositions(): Promise<PositionRecord[]> {
   const { rows } = await pool.query<PositionRecord>(
     `${SELECT_POSITIONS} ORDER BY p.status = 'open' DESC, p.created_at DESC`
@@ -64,6 +70,7 @@ export async function listPositions(): Promise<PositionRecord[]> {
   return rows;
 }
 
+/** เปิดตำแหน่งใหม่ — แผนกไม่มีจริงโยน 400 */
 export async function createPosition(input: PositionInput): Promise<PositionRecord> {
   try {
     const { rows } = await pool.query<{ position_id: number }>(
@@ -82,6 +89,7 @@ export async function createPosition(input: PositionInput): Promise<PositionReco
   }
 }
 
+/** แก้ไขตำแหน่ง — ไม่เจอ 404 */
 export async function updatePosition(id: number, input: PositionInput): Promise<PositionRecord> {
   const { rowCount } = await pool.query(
     `UPDATE positions SET title = $1, department_id = $2, description = $3, headcount = $4, status = $5
@@ -93,6 +101,7 @@ export async function updatePosition(id: number, input: PositionInput): Promise<
   return rows[0];
 }
 
+/** ปิด/ลบตำแหน่ง — มีผู้สมัครอยู่ 409, ไม่เจอ 404 */
 export async function deletePosition(id: number): Promise<void> {
   const { rows: used } = await pool.query<{ count: string }>(
     'SELECT count(*) AS count FROM applicants WHERE position_id = $1',
@@ -105,6 +114,7 @@ export async function deletePosition(id: number): Promise<void> {
   if (rowCount === 0) throw new ServiceError(404, 'Position not found');
 }
 
+/** รายชื่อผู้สมัคร — กรองตามตำแหน่งได้ (scope = position_id), ใหม่สุดก่อน */
 export async function listApplicants(positionId: number | null): Promise<ApplicantRecord[]> {
   const { rows } = await pool.query<ApplicantRecord>(
     `${SELECT_APPLICANTS} ${positionId ? 'WHERE a.position_id = $1' : ''} ORDER BY a.applied_at DESC`,
@@ -113,6 +123,7 @@ export async function listApplicants(positionId: number | null): Promise<Applica
   return rows;
 }
 
+/** เพิ่มผู้สมัคร (สถานะเริ่มต้น applied) — ตำแหน่งไม่มีจริงโยน 400 */
 export async function createApplicant(input: ApplicantInput): Promise<ApplicantRecord> {
   try {
     const { rows } = await pool.query<{ applicant_id: number }>(
@@ -134,6 +145,7 @@ export async function createApplicant(input: ApplicantInput): Promise<ApplicantR
   }
 }
 
+/** เลื่อนสถานะผู้สมัครตาม pipeline — ไม่เจอ 404 */
 export async function setApplicantStatus(id: number, status: ApplicantStatus): Promise<{ applicant_id: number; status: string }> {
   const { rows } = await pool.query<{ applicant_id: number; status: string }>(
     'UPDATE applicants SET status = $1 WHERE applicant_id = $2 RETURNING applicant_id, status',

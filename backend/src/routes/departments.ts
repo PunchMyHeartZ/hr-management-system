@@ -1,3 +1,7 @@
+// ============================================================
+// /api/departments — CRUD แผนก (ใช้กับ dropdown และหน้าจัดการแผนก)
+// สิทธิ์: ดู — ทุกคนที่ล็อกอิน, แก้ไข — HR และผู้บริหาร
+// ============================================================
 import express from 'express';
 import { z } from 'zod';
 import type { Request, Response } from 'express';

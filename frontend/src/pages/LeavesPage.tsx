@@ -1,3 +1,6 @@
+// ==============================
+// หน้าจัดการการลา — ตารางคำขอลาทั้งหมด (HR) หรือของตัวเอง (โหมด self) พร้อมปุ่มอนุมัติ/ปฏิเสธ
+// ==============================
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
@@ -11,12 +14,18 @@ import Avatar from '../components/Avatar';
 import { Inbox } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+/**
+ * หน้าจัดการการลา
+ * @param self ถ้า true = โหมดพนักงานยื่นลาให้ตัวเอง (ไม่มีปุ่มอนุมัติ)
+ */
 export default function LeavesPage({ self = false }: { self?: boolean }) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isManager = ['hr', 'executive'].includes(user?.role ?? '');
+  // อนุมัติได้เฉพาะ HR/Executive และไม่ใช่โหมด self; ยื่นลาได้ทั้ง self และ manager
   const canApprove = !self && isManager;
   const canRequest = self || isManager;
+  // ส่วน state: รายการลา, พนักงาน, สถานะโหลด/error, dialog, id ที่กำลังอนุมัติอยู่
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +35,7 @@ export default function LeavesPage({ self = false }: { self?: boolean }) {
 
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
 
+  // ส่วนดึงข้อมูล: โหลดคำขอลา + รายชื่อพนักงาน
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -44,6 +54,7 @@ export default function LeavesPage({ self = false }: { self?: boolean }) {
     load();
   }, [load]);
 
+  // ส่วน event handler: อัปเดตสถานะใบลา (อนุมัติ/ปฏิเสธ) — ป้องกันกดซ้ำด้วย busyId
   const updateStatus = async (id: number, status: LeaveStatus) => {
     if (busyId) return;
     setBusyId(id);
@@ -59,6 +70,7 @@ export default function LeavesPage({ self = false }: { self?: boolean }) {
 
   return (
     <section>
+      {/* ส่วนหัวหน้า + ปุ่มยื่นลา */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">{t('leaves.title')}</h2>
@@ -75,6 +87,7 @@ export default function LeavesPage({ self = false }: { self?: boolean }) {
         )}
       </div>
 
+      {/* dialog ยื่นลา — โหมด self จะล็อก id พนักงานเป็นตัวเอง */}
       {canRequest && (
         <LeaveDialog
           open={dialogOpen}
@@ -100,9 +113,11 @@ export default function LeavesPage({ self = false }: { self?: boolean }) {
         </div>
       )}
 
+      {/* ส่วนแสดงตารางคำขอลา */}
       {!loading && (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
+            {/* หัวตาราง */}
             <thead className="bg-slate-50">
               <tr>
                 {[t('leaves.employee'), t('leaves.leaveType'), t('leaves.startDate'), t('leaves.endDate'), t('leaves.days'), t('leaves.reason'), t('common.status'), t('common.actions')].map((label, i) => (
@@ -136,6 +151,7 @@ export default function LeavesPage({ self = false }: { self?: boolean }) {
                   <td className="px-4 py-3">
                     <Badge status={l.status} />
                   </td>
+                  {/* ปุ่มอนุมัติ/ปฏิเสธ (เฉพาะใบ pending และผู้มีสิทธิ์) */}
                   <td className="whitespace-nowrap px-4 py-3">
                     {l.status === 'pending' && canApprove ? (
                       <div className="flex gap-2">

@@ -1,3 +1,6 @@
+// ==============================
+// หน้าจัดการพนักงาน — ตารางรายชื่อ + ฟอร์มเพิ่ม/แก้ไข (EmployeeDialog) พร้อมค้นหาและกรองแผนก
+// ==============================
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Select from '@radix-ui/react-select';
@@ -13,11 +16,14 @@ import Badge from '../components/Badge';
 import { useAuth } from '../context/AuthContext';
 import { useNav } from '../context/NavContext';
 
+/** หน้ารายชื่อพนักงาน — ค้นหา/กรอง, แสดงตารางข้อมูล, เปิดโปรไฟล์หรือแก้ไข (เฉพาะ HR/Executive) */
 export default function EmployeesPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { openProfile } = useNav();
+  // เฉพาะ HR/Executive แก้ไขข้อมูลพนักงานได้
   const canEdit = ['hr', 'executive'].includes(user?.role ?? '');
+  // ส่วน state: ข้อมูลพนักงาน/แผนก, สถานะโหลด, dialog, คำค้นหาและตัวกรองแผนก
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +35,7 @@ export default function EmployeesPage() {
 
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
 
+  // ส่วนดึงข้อมูล: โหลดพนักงาน + แผนกพร้อมกัน
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -47,6 +54,7 @@ export default function EmployeesPage() {
     load();
   }, [load]);
 
+  // ส่วนกรองรายชื่อ: ตรงกับคำค้น (ชื่อ/อีเมล/ตำแหน่ง) และแผนกที่เลือก
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return employees.filter((e) => {
@@ -60,6 +68,7 @@ export default function EmployeesPage() {
     });
   }, [employees, search, deptFilter]);
 
+  // เปิด dialog แก้ไข / เพิ่มพนักงาน
   const openEdit = (employee: Employee) => {
     setEditing(employee);
     setDialogOpen(true);
@@ -72,6 +81,7 @@ export default function EmployeesPage() {
 
   return (
     <section>
+      {/* ส่วนหัวหน้า + ปุ่มเพิ่มพนักงาน (เฉพาะผู้มีสิทธิ์) */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">{t('employees.title')}</h2>
@@ -95,6 +105,7 @@ export default function EmployeesPage() {
         employee={editing}
       />
 
+      {/* ส่วนค้นหา + ตัวกรองแผนก + ตัวนับจำนวน */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex w-full max-w-xs items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-sm focus-within:border-azure-500 focus-within:ring-2 focus-within:ring-azure-500/30">
           <Search className="h-4 w-4 shrink-0 text-slate-400" />
@@ -161,9 +172,11 @@ export default function EmployeesPage() {
         </div>
       )}
 
+      {/* ส่วนแสดงตารางรายชื่อ */}
       {!loading && !error && (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
+            {/* หัวตาราง */}
             <thead className="bg-slate-50">
               <tr>
                 {[
@@ -189,8 +202,10 @@ export default function EmployeesPage() {
                 ))}
               </tr>
             </thead>
+            {/* แถวข้อมูลพนักงาน */}
             <tbody className="divide-y divide-slate-100">
               {filtered.map((e) => {
+                // วันลาคงเหลือ = โควตาประจำปี - วันที่ใช้ไปแล้ว
                 const remaining = Number(e.annual_leave_quota) - Number(e.used_leave_days);
                 return (
                   <tr key={e.employee_id} className="hover:bg-slate-50">
@@ -223,6 +238,7 @@ export default function EmployeesPage() {
                     <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
                       {formatMoney(e.salary, locale)}
                     </td>
+                    {/* ป้ายวันลาคงเหลือ — สีตามจำนวน: เขียว >3, เหลือง 1-3, แดงหมด */}
                     <td className="whitespace-nowrap px-4 py-3">
                       <span
                         title={`${t('employees.leaveQuota')}: ${e.annual_leave_quota} | ${t('leaves.days')}: ${e.used_leave_days}`}

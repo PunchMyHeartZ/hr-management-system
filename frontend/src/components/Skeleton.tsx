@@ -1,3 +1,8 @@
+// ==============================
+// ชิ้นส่วน loading — Spinner และ skeleton (พื้นที่จองเด้ง ๆ) ระหว่างรอข้อมูลจาก API
+// ==============================
+
+/** วงกลมหมุนเล็ก ๆ (spinner) — ใช้ในปุ่มหรือจุดที่กำลังประมวลผล */
 export function Spinner({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <span
@@ -7,10 +12,12 @@ export function Spinner({ className = 'h-4 w-4' }: { className?: string }) {
   );
 }
 
+/** บล็อกสีเทากระพริบ ๆ ใช้เป็น placeholder ของเนื้อหา */
 export function SkeletonBlock({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-lg bg-slate-200/80 ${className}`} />;
 }
 
+/** skeleton รูปแบบการ์์ด KPI — แสดง count ใบระหว่างโหลดข้อมูล */
 export function SkeletonCards({ count = 4 }: { count?: number }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -28,6 +35,7 @@ export function SkeletonCards({ count = 4 }: { count?: number }) {
   );
 }
 
+/** skeleton รูปแบบตาราง — rows แถว x cols คอลัมน์ พร้อมหัวตาราง */
 export function SkeletonTable({ rows = 5, cols = 6 }: { rows?: number; cols?: number }) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -51,6 +59,7 @@ export function SkeletonTable({ rows = 5, cols = 6 }: { rows?: number; cols?: nu
   );
 }
 
+/** skeleton รูปแบบกราฟ — การ์ดแท่งกราฟจำลองความสูงต่าง ๆ 2 ใบ */
 export function SkeletonCharts() {
   return (
     <div className="grid gap-6 lg:grid-cols-2">

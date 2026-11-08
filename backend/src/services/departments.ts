@@ -1,3 +1,8 @@
+// ============================================================
+// บริการจัดการแผนก — CRUD พื้นฐาน
+// กติกาสำคัญ: ลบแผนกไม่ได้ถ้ายังมีพนักงานสังกัดอยู่ (โยน 409)
+// (นอกเหนือจากนี้ DB ก็มี FK ON DELETE RESTRICT กันอยู่แล้ว — เช็คซ้ำเพื่อข้อความชัดเจน)
+// ============================================================
 import { pool, pgErrorCode } from '../db';
 import { ServiceError } from './errors';
 
@@ -12,12 +17,14 @@ export interface DepartmentBody {
   department_code: string;
 }
 
+/** ชื่อหรือโค้ดแผนกซ้ำ (UNIQUE) → 409 */
 function mapDuplicateError(err: unknown): void {
   if (pgErrorCode(err) === '23505') {
     throw new ServiceError(409, 'Department name or code already exists');
   }
 }
 
+/** รายชื่อแผนกทั้งหมด ตามตัวอักษร (ใช้กับ dropdown ในฟอร์ม) */
 export async function listDepartments(): Promise<DepartmentRecord[]> {
   const { rows } = await pool.query<DepartmentRecord>(
     'SELECT department_id, department_name, department_code FROM departments ORDER BY department_name'
@@ -25,6 +32,7 @@ export async function listDepartments(): Promise<DepartmentRecord[]> {
   return rows;
 }
 
+/** สร้างแผนกใหม่ */
 export async function createDepartment(body: DepartmentBody): Promise<DepartmentRecord> {
   try {
     const { rows } = await pool.query<DepartmentRecord>(
@@ -40,6 +48,7 @@ export async function createDepartment(body: DepartmentBody): Promise<Department
   }
 }
 
+/** เปลี่ยนชื่อ/โค้ดแผนก — ไม่เจอ 404, ซ้ำ 409 */
 export async function updateDepartment(id: number, body: DepartmentBody): Promise<DepartmentRecord> {
   try {
     const { rows } = await pool.query<DepartmentRecord>(
@@ -57,6 +66,7 @@ export async function updateDepartment(id: number, body: DepartmentBody): Promis
   }
 }
 
+/** ลบแผนก — ปฏิเสธถ้ายังมีพนักงานอยู่ (409), ไม่มีแผนกนี้ 404 */
 export async function deleteDepartment(id: number): Promise<void> {
   const { rows: used } = await pool.query<{ count: string }>(
     'SELECT count(*) AS count FROM employees WHERE department_id = $1',

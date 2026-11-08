@@ -1,3 +1,6 @@
+// ==============================
+// หน้าประเมินผลพนักงาน — ตารางรายการประเมิน + dialog ฟอร์ม (พร้อม goal ย่อยที่เพิ่ม/ลบได้)
+// ==============================
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +17,7 @@ import { useNav } from '../context/NavContext';
 const inputCls =
   'mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-azure-500 focus:outline-none focus:ring-2 focus:ring-azure-500/30';
 
+// ร่าง goal ในฟอร์ม (เก็บเป็น string เพื่อผูกกับ input ตรง ๆ)
 interface GoalDraft {
   title: string;
   weight: string;
@@ -27,9 +31,11 @@ interface ReviewDialogProps {
   onSaved: () => void;
 }
 
+/** Dialog สร้าง/แก้ไขการประเมิน — ข้อมูลรอบประเมิน, คะแนนรวม, จุดแข็ง/จุดพัฒนา และรายการ goals */
 function ReviewDialog({ review, employees, onClose, onSaved }: ReviewDialogProps) {
   const { t } = useTranslation();
   const yearNow = new Date().getFullYear();
+  // ส่วน state ของฟอร์ม (ถ้าแก้ไขให้เติมค่าจาก review เดิม, goals เริ่ม 1 แถวว่าง)
   const [employeeId, setEmployeeId] = useState(review ? String(review.employee_id) : '');
   const [periodYear, setPeriodYear] = useState(String(review?.period_year ?? yearNow));
   const [reviewer, setReviewer] = useState(review?.reviewer_name ?? '');
@@ -45,15 +51,18 @@ function ReviewDialog({ review, employees, onClose, onSaved }: ReviewDialogProps
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // แก้ไข goal แถวที่ i ด้วย patch บางส่วน
   const setGoal = (i: number, patch: Partial<GoalDraft>) =>
     setGoals((gs) => gs.map((g, idx) => (idx === i ? { ...g, ...patch } : g)));
 
+  // ส่วน submit: รวม goals (ตัดแถวที่ไม่มีชื่อออก) แล้วสร้าง/อัปเดตการประเมิน
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!employeeId) {
       setError(t('employees.selectDepartment'));
       return;
     }
+    // เก็บเฉพาะ goal ที่กรอกชื่อ — weight ไม่ใช่ตัวเลขใช้ 1, score ว่างเก็บเป็น null
     const goalPayload: ReviewGoalPayload[] = goals
       .filter((g) => g.title.trim())
       .map((g) => ({
@@ -96,6 +105,7 @@ function ReviewDialog({ review, employees, onClose, onSaved }: ReviewDialogProps
             {review ? t('reviews.edit') : t('reviews.add')}
           </Dialog.Title>
 
+          {/* ส่วนฟอร์ม: ข้อมูลรอบประเมิน (พนักงาน/ปี/สถานะ) */}
           <form onSubmit={submit} className="mt-4 space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <label className="block text-sm">
@@ -148,6 +158,7 @@ function ReviewDialog({ review, employees, onClose, onSaved }: ReviewDialogProps
               </label>
             </div>
 
+            {/* ผู้ประเมิน + คะแนนรวม (1-5) */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="block text-sm">
                 <span className="font-medium text-slate-700">{t('reviews.reviewer')} *</span>
@@ -168,6 +179,7 @@ function ReviewDialog({ review, employees, onClose, onSaved }: ReviewDialogProps
               <textarea rows={2} value={improvements} onChange={(e) => setImprovements(e.target.value)} className={inputCls} />
             </label>
 
+            {/* ส่วนรายการ goals: เพิ่ม/แก้/ลบแถวได้ (ชื่อ + น้ำหนัก + คะแนน) */}
             <div className="rounded-xl border border-slate-200 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-semibold text-slate-700">{t('reviews.goals')}</span>
@@ -243,9 +255,11 @@ function ReviewDialog({ review, employees, onClose, onSaved }: ReviewDialogProps
   );
 }
 
+/** หน้ารายการประเมินผล — โหลดรายการ + พนักงาน, แก้ไข (ดึงรายละเอียดเต็ม) และลบ */
 export default function ReviewsPage() {
   const { t } = useTranslation();
   const { openProfile } = useNav();
+  // ส่วน state: รายการประเมิน, พนักงาน, สถานะโหลด, dialog
   const [reviews, setReviews] = useState<Review[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,6 +267,7 @@ export default function ReviewsPage() {
   const [dialogReview, setDialogReview] = useState<Review | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // ส่วนดึงข้อมูล: โหลดการประเมิน + รายชื่อพนักงาน
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -271,6 +286,7 @@ export default function ReviewsPage() {
     load();
   }, [load]);
 
+  // เปิดแก้ไข: ดึงรายละเอียดเต็ม (รวม goals) — ถ้าพลาดใช้ข้อมูลจากตารางแทน
   const openEdit = async (review: Review) => {
     try {
       const full = await api.getReview(review.review_id);
@@ -281,6 +297,7 @@ export default function ReviewsPage() {
     setDialogOpen(true);
   };
 
+  // ลบการประเมิน (มี confirm)
   const remove = async (review: Review) => {
     if (!window.confirm(t('reviews.deleteConfirm'))) return;
     try {
@@ -293,6 +310,7 @@ export default function ReviewsPage() {
 
   return (
     <section>
+      {/* ส่วนหัวหน้า + ปุ่มเพิ่มการประเมิน */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">{t('reviews.title')}</h2>
@@ -313,6 +331,7 @@ export default function ReviewsPage() {
       {loading && <SkeletonTable rows={4} cols={6} />}
       {error && <p className="banner-in rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{t('common.error')}: {error}</p>}
 
+      {/* ส่วนแสดงตารางการประเมิน */}
       {!loading && !error && (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -341,6 +360,7 @@ export default function ReviewsPage() {
                   <td className="px-4 py-3 text-slate-600">{r.department_name}</td>
                   <td className="px-4 py-3 font-medium text-slate-900">{r.period_year}</td>
                   <td className="px-4 py-3 text-slate-600">{r.reviewer_name}</td>
+                  {/* ป้ายคะแนนรวม: เขียว >=4, เหลือง >=3, แดง <3 */}
                   <td className="px-4 py-3">
                     {r.overall_score == null ? (
                       <span className="text-slate-400">-</span>

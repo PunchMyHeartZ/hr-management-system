@@ -1,3 +1,6 @@
+// ==============================
+// Dialog สร้างคำขอลา — เลือกพนักงาน (หรือล็อกตายตัว), ประเภทการลา, ช่วงวันที่ และเหตุผล
+// ==============================
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +22,7 @@ interface LeaveForm {
   reason: string;
 }
 
+// ค่าเริ่มต้นของฟอร์มว่างเปล่า
 const EMPTY: LeaveForm = {
   employee_id: '',
   leave_type: '',
@@ -38,8 +42,14 @@ interface LeaveDialogProps {
   fixedEmployeeId?: number;
 }
 
+/**
+ * Dialog สร้างคำขอลา
+ * @param employees รายชื่อพนักงานให้เลือก (โหมด HR)
+ * @param fixedEmployeeId ถ้ากำหนด จะล็อกการลาให้พนักงานคนนี้ (โหมดพนักงานยื่นเอง)
+ */
 export default function LeaveDialog({ open, onOpenChange, onCreated, employees = [], fixedEmployeeId }: LeaveDialogProps) {
   const { t } = useTranslation();
+  // ส่วน state ของฟอร์ม
   const [form, setForm] = useState<LeaveForm>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -47,8 +57,10 @@ export default function LeaveDialog({ open, onOpenChange, onCreated, employees =
   const set = (key: keyof LeaveForm) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  // ส่วน submit: validate ด้วย zod แล้วส่งคำขอลาไป API
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    // ถ้าล็อกพนักงานไว้ (โหมด self) ให้ใช้ id นั้นแทนค่าจาก dropdown
     const employeeId = fixedEmployeeId != null ? String(fixedEmployeeId) : form.employee_id;
     const parsed = leaveFormSchema.safeParse({ ...form, employee_id: employeeId });
     if (!parsed.success) {
@@ -88,6 +100,7 @@ export default function LeaveDialog({ open, onOpenChange, onCreated, employees =
             {t('leaves.subtitle')}
           </Dialog.Description>
 
+          {/* ส่วนฟอร์ม: ถ้าล็อกพนักงานไว้จะไม่แสดง dropdown เลือกพนักงาน */}
           <form onSubmit={submit} className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {fixedEmployeeId != null ? (
               <div className="sr-only" aria-hidden="true" />
@@ -157,6 +170,7 @@ export default function LeaveDialog({ open, onOpenChange, onCreated, employees =
                 </Select.Portal>
               </Select.Root>
             </label>
+            {/* ช่วงวันที่เริ่ม-สิ้นสุด (สิ้นสุดไม่ให้เลือกก่อนวันเริ่มผ่าน min) */}
             <label className="block text-sm">
               <span className="font-medium text-slate-700">{t('leaves.startDate')} *</span>
               <input required type="date" value={form.start_date} onChange={set('start_date')} className={inputCls} />

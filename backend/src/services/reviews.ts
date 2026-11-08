@@ -1,3 +1,9 @@
+// ============================================================
+// บริการประกวดผลงาน (Performance Review)
+// 1 รีวิว = ข้อมูลหลัก + เป้าหมาย (goals) ที่มี weight ถ่วงน้ำหนัก
+// สร้าง/แก้ไขใช้ transaction: บันทึกรีวิวและ goals พร้อมกัน หรือไม่มีอะไรเลย
+// (แก้ไข = ลบ goals เดิมทิ้งแล้วใส่ชุดใหม่ — replace pattern)
+// ============================================================
 import type { PoolClient } from 'pg';
 import { pool, pgErrorCode } from '../db';
 import { ServiceError } from './errors';
@@ -60,16 +66,19 @@ const SELECT_REVIEWS = `
   JOIN departments d ON d.department_id = e.department_id
 `;
 
+/** ดึงรีวิว 1 ชิ้น (ไม่รวม goals) — ไม่เจอ 404 */
 async function loadReview(reviewId: number): Promise<ReviewRecord> {
   const { rows } = await pool.query<ReviewRecord>(`${SELECT_REVIEWS} WHERE r.review_id = $1`, [reviewId]);
   if (rows.length === 0) throw new ServiceError(404, 'Review not found');
   return rows[0];
 }
 
+/** ดึงรีวิว 1 ชิ้น — export ให้ route ใช้ตรวจสิทธิ์ (ดู employee_id ก่อนเปิดให้ดู goals) */
 export async function findReview(reviewId: number): Promise<ReviewRecord> {
   return loadReview(reviewId);
 }
 
+/** ดึงเป้าหมายทั้งหมดของรีวิว (เรียงตามลำดับที่สร้าง) */
 export async function findReviewGoals(reviewId: number): Promise<GoalRecord[]> {
   const { rows } = await pool.query<GoalRecord>(
     'SELECT goal_id, review_id, title, weight, score FROM review_goals WHERE review_id = $1 ORDER BY goal_id',
@@ -78,6 +87,7 @@ export async function findReviewGoals(reviewId: number): Promise<GoalRecord[]> {
   return rows;
 }
 
+/** รายการรีวิว — กรองตามพนักงานและ/หรือปี (สร้าง WHERE แบบไดนามิกพร้อม placeholder $1,$2,...) */
 export async function listReviews(filter: ReviewFilter): Promise<ReviewRecord[]> {
   const conditions: string[] = [];
   const params: unknown[] = [];
@@ -97,6 +107,7 @@ export async function listReviews(filter: ReviewFilter): Promise<ReviewRecord[]>
   return rows;
 }
 
+/** รีวิวซ้ำ (พนักงาน + ปีเดียวกัน) 409, พนักงานไม่มีจริง 400 */
 function mapWriteConstraintError(err: unknown): void {
   if (pgErrorCode(err) === '23505') {
     throw new ServiceError(409, 'A review already exists for this employee and year');
@@ -106,6 +117,7 @@ function mapWriteConstraintError(err: unknown): void {
   }
 }
 
+/** เพิ่ม goals ทีละแถวภายใน transaction ของรีวิวนั้นๆ */
 async function insertGoals(client: PoolClient, reviewId: number, goals: GoalInput[]): Promise<void> {
   for (const goal of goals) {
     await client.query(
@@ -115,6 +127,7 @@ async function insertGoals(client: PoolClient, reviewId: number, goals: GoalInpu
   }
 }
 
+/** สร้างรีวิวพร้อม goals ใน transaction เดียว — สำเร็จคืนรีวิวที่เพิ่งสร้าง */
 export async function createReview(employeeId: number, body: ReviewWrite): Promise<ReviewRecord> {
   const client = await pool.connect();
   try {
@@ -138,6 +151,7 @@ export async function createReview(employeeId: number, body: ReviewWrite): Promi
   }
 }
 
+/** แก้ไขรีวิว — goals ถูกแทนที่ทั้งชุด (DELETE แล้ว INSERT ใหม่ใน transaction เดียวกัน) */
 export async function updateReview(reviewId: number, body: ReviewWrite): Promise<ReviewRecord> {
   const client = await pool.connect();
   try {
@@ -163,6 +177,7 @@ export async function updateReview(reviewId: number, body: ReviewWrite): Promise
   }
 }
 
+/** ลบรีวิว — goals หายตามอัตโนมัติ (FK CASCADE), ไม่เจอ 404 */
 export async function deleteReview(reviewId: number): Promise<void> {
   const { rowCount } = await pool.query('DELETE FROM reviews WHERE review_id = $1', [reviewId]);
   if (rowCount === 0) throw new ServiceError(404, 'Review not found');

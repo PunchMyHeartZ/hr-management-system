@@ -1,7 +1,15 @@
 // Generates HR-System-Presentation.pptx (modern Thai deck, 16:9)
+/*
+ * สคริปต์สร้างไฟล์นำเสนอ HR-System-Presentation.pptx (สไลด์ภาษาไทย, 16:9)
+ * ผลลัพธ์ถูกบันทึกไว้ที่โฟลเดอร์รากของโปรเจกต์ (ออกจาก tools/pptx สองระดับ)
+ * วิธีรัน: node gen-pptx.js (รันจากโฟลเดอร์ tools/pptx นี้)
+ *   ต้องติดตั้ง dependency ก่อน: npm install pptxgenjs
+ *   เมื่อสำเร็จจะพิมพ์ "CREATED: <ตำแหน่งไฟล์>" ออกทาง console
+ */
 const path = require('path');
 const PptxGenJS = require('pptxgenjs');
 
+// C = ชุดสี (design tokens) ที่ใช้ทั้งเด็ค, FONT = ฟอนต์หลักสำหรับข้อความไทย, MONO = ฟอนต์โค้ด/ชื่อตาราง
 const C = {
   indigo: '4F46E5', violet: '7C3AED', dark: '0F172A', slate: '334155',
   gray: '64748B', light: 'F5F6FA', white: 'FFFFFF', border: 'E2E8F0',
@@ -11,14 +19,18 @@ const C = {
 const FONT = 'Leelawadee UI';
 const MONO = 'Consolas';
 
+// สร้าง PptxGenJS instance และตั้งค่าเด็ค: layout กว้าง 16:9, ผู้สร้าง, ชื่อเรื่อง
 const pptx = new PptxGenJS();
 pptx.defineLayout({ name: 'WIDE', width: 13.33, height: 7.5 });
 pptx.layout = 'WIDE';
 pptx.author = 'HR System Project';
 pptx.title = 'HR Management System';
 
+// ตัวนับเลขหน้าสไลด์ (เริ่มพิมพ์เลขหน้าจริงตั้งแต่หน้าที่ 2)
 let pageNo = 0;
 
+// สร้างสไลด์ใหม่พร้อมโครงหัวกระดาษมาตรฐาน: แท็บ kicker, ชื่อเรื่อง (title),
+//   หัวข้อรอง (sub), เลขหน้ามุมล่างขวา และวงกลมตกแต่งที่มุมสไลด์
 function baseSlide(kicker, title, sub) {
   const s = pptx.addSlide();
   s.background = { color: C.light };
@@ -35,6 +47,8 @@ function baseSlide(kicker, title, sub) {
   return s;
 }
 
+// วาดป้ายไอคอนวงกลม (icon badge) บนสไลด์ s ที่ตำแหน่ง x,y พื้นสี color
+//   glyph กำหนดรูปไอคอนที่วาดด้วย shape เช่น users, calendar, clock, banknote
 function iconBadge(s, x, y, color, glyph) {
   const g = { fill: { color: C.white }, line: { type: 'none' } };
   s.addShape(pptx.ShapeType.ellipse, { x, y, w: 0.46, h: 0.46, fill: { color } });
@@ -73,6 +87,8 @@ function iconBadge(s, x, y, color, glyph) {
   }
 }
 
+// วาดการ์ดขาวขอบมน พร้อมแถบสี accent ด้านซ้าย หัวข้อ title และเนื้อหา body
+//   (ถ้าส่ง icon มาด้วยจะวาด iconBadge ไว้ข้างหัวข้อ)
 function card(s, x, y, w, h, title, body, accent = C.indigo, bodySize = 11, icon = null) {
   s.addShape(pptx.ShapeType.roundRect, { x, y, w, h, fill: { color: C.white }, line: { color: C.border, width: 1 }, rectRadius: 0.09 });
   s.addShape(pptx.ShapeType.rect, { x, y, w: 0.07, h, fill: { color: accent } });
@@ -86,11 +102,14 @@ function card(s, x, y, w, h, title, body, accent = C.indigo, bodySize = 11, icon
   }
 }
 
+// วาดชิปป้ายข้อความรูปแคปซูล (pill) ตัวอักษรสี fg บนพื้น bg ใช้แสดง tag เช่นชื่อเทคโนโลยี
 function chip(s, x, y, text, fg, bg, w = 1.45) {
   s.addShape(pptx.ShapeType.roundRect, { x, y, w, h: 0.32, fill: { color: bg }, rectRadius: 0.16 });
   s.addText(text, { x, y, w, h: 0.32, fontSize: 10, bold: true, color: fg, align: 'center', valign: 'middle', fontFace: FONT });
 }
 
+// วาดกล่องตารางฐานข้อมูลสำหรับ ER diagram: หัวสี headerColor พร้อมชื่อตาราง name
+//   และรายการ fields (แถวที่เป็น PK สีเหลือง, FK สีเขียว)
 function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
   s.addShape(pptx.ShapeType.roundRect, { x, y, w, h, fill: { color: C.white }, line: { color: headerColor, width: 1.5 }, rectRadius: 0.07 });
   s.addShape(pptx.ShapeType.rect, { x, y, w, h: 0.38, fill: { color: headerColor } });
@@ -103,6 +122,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 1 : TITLE ---------- */
+// SLIDE 1: TITLE — หน้าปก ชื่อโปรเจกต์ไทย/อังกฤษ + ชิปสรุปเทคโนโลยีที่ใช้
 {
   const s = pptx.addSlide();
   s.background = { color: C.dark };
@@ -128,6 +148,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 2 : FEATURES ---------- */
+// SLIDE 2: FEATURES — ฟีเจอร์หลัก 8 ข้อของระบบ เรียงเป็นการ์ดพร้อมไอคอน
 {
   const s = baseSlide('OVERVIEW', 'ฟีเจอร์หลักของระบบ', 'พัฒนาครบทั้ง Frontend, Backend และ Database');
   const feats = [
@@ -147,6 +168,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 3 : DASHBOARD PREVIEW ---------- */
+// SLIDE 3: DASHBOARD PREVIEW — จำลองหน้า Dashboard: KPI cards + กราฟแท่งค่าจ่ายรายเดือน + โดนัทสัดส่วนวันลา
 {
   const s = baseSlide('DASHBOARD PREVIEW', 'ภาพรวมในหน้าเดียว — KPI + กราฟ', 'ตัวอย่างหน้า Dashboard (บนเว็บจริงวาดด้วย Recharts)');
   const kpis = [
@@ -192,6 +214,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 3 : ARCHITECTURE ---------- */
+// SLIDE 3: ARCHITECTURE — สถาปัตยกรรม 3-Tier (Frontend/API/Database) + การ์ดสื่อสาร ความปลอดภัย ธุรกรรม
 {
   const s = baseSlide('ARCHITECTURE', 'สถาปัตยกรรมระบบ', '3-Tier Architecture — แยกชั้นชัดเจน');
   const tiers = [
@@ -217,6 +240,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 4 : ER CORE ---------- */
+// SLIDE 4: ER CORE — ER diagram ตารางแกนหลัก departments -> employees -> leave_requests
 {
   const s = baseSlide('ENTITY DESIGN 1/2', 'เอนทิตี้หลัก — ข้อมูลองค์กรและการลา', 'ความสัมพันธ์แบบ One-to-Many (1 ──∞)');
   entity(s, 0.6, 2.1, 3.0, 3.3, 'departments', [
@@ -252,6 +276,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 5 : ER PAYROLL + USERS ---------- */
+// SLIDE 5: ER PAYROLL + USERS — ตารางกลุ่มเงินเดือน (attendance/bonuses/payroll_records) และ users
 {
   const s = baseSlide('ENTITY DESIGN 2/2', 'เอนทิตี้เงินเดือนและผู้ใช้งาน', 'ทุกตารางผูกกับ employees ด้วย FK (ON DELETE CASCADE)');
   entity(s, 0.6, 2.1, 3.0, 3.5, 'attendance', [
@@ -295,6 +320,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 6 : ER V3 MODULES ---------- */
+// SLIDE 6: ER V3 MODULES — ตารางโมดูลเสริม v3: ประกาศ ประกวดผลงาน (reviews/review_goals) และรับสมัครงาน
 {
   const s = baseSlide('ENTITY DESIGN 3/3', 'เอนทิตี้โมดูลเสริม v3 — HR ครบวงจร', 'ประกาศ • ประกวดผลงาน • รับสมัครงาน (เพิ่ม 5 ตาราง รวมเป็น 12 ตาราง)');
   entity(s, 0.6, 2.1, 2.5, 2.9, 'announcements', [
@@ -342,6 +368,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 6 : DDL ---------- */
+// SLIDE 6: DDL — ตัวอย่าง DDL script บน pgAdmin + ลำดับไฟล์ migration ทั้ง 5 ไฟล์
 {
   const s = baseSlide('DDL — pgAdmin', 'สร้างตารางด้วย DDL Script', 'รันผ่าน pgAdmin Query Tool — 5 ไฟล์ตามลำดับการพัฒนา • มี Prisma schema สะท้อนโครงสร้างเดียวกัน');
   const code = [
@@ -374,6 +401,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 7 : API ---------- */
+// SLIDE 7: API — ตารางสรุป REST API endpoints พร้อมสิทธิ์การเข้าถึงของแต่ละบทบาท
 {
   const s = baseSlide('BACKEND', 'REST API Endpoints', '39 Endpoints • ทุก endpoint ตรวจสิทธิ์ด้วย JWT (ยกเว้น register/login) • บทบาทพนักงานเห็นเฉพาะข้อมูลของตัวเอง');
   const head = { fill: { color: C.indigo }, color: C.white, bold: true, fontFace: FONT, fontSize: 10.5, valign: 'middle' };
@@ -397,6 +425,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 8 : SECURITY ---------- */
+// SLIDE 8: SECURITY — ขั้นตอนยืนยันตัวตน (bcrypt -> JWT -> middleware) และสิทธิ์ 3 ระดับ
 {
   const s = baseSlide('SECURITY & ROLES', 'ระบบสมาชิก + การจำกัดสิทธิ์', 'JWT + bcrypt + Role-based Access Control');
   const flow = [
@@ -417,6 +446,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 9 : PAYROLL ---------- */
+// SLIDE 9: PAYROLL — สูตรคำนวณ OT, ประกันสังคม, ภาษีหัก ณ ที่จ่าย และสรุปเงินสุทธิ
 {
   const s = baseSlide('PAYROLL ENGINE', 'สูตรคำนวณเงินเดือน (โดยประมาณ)', 'อ้างอิงหลักเกณฑ์ไทย — อยู่ใน backend/src/payroll.ts');
   card(s, 0.6, 2.05, 6.0, 1.55, 'ค่าล่วงเวลา (OT)', 'OT = ชม.OT × (เงินเดือน ÷ 30 ÷ 8) × 1.5\nชม.OT = ชั่วโมงทำงาน − 8 (หักพักเที่ยง 1 ชม.)', C.sky, 12);
@@ -428,6 +458,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 10 : UI ---------- */
+// SLIDE 10: UI — จุดเด่นของ Frontend: 2 ภาษา, กราฟ, Employee Portal, a11y, แจ้งเตือน
 {
   const s = baseSlide('FRONTEND UI/UX', 'หน้าตาและประสบการณ์ใช้งาน', 'Modern UI — 12 หน้า • แยก App ของ HR/ผู้บริหาร และพนักงาน (Self-service)');
   const items = [
@@ -445,6 +476,7 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
 }
 
 /* ---------- SLIDE 11 : SUMMARY ---------- */
+// SLIDE 11: SUMMARY — สรุปตัวเลขโปรเจกต์ สิ่งที่ทำได้ บัญชีทดลอง และคำสั่งรันระบบสาธิต
 {
   const s = baseSlide('SUMMARY & DEMO', 'สรุป & วิธีเปิดระบบสาธิต');
   const stats = [
@@ -472,5 +504,6 @@ function entity(s, x, y, w, h, name, fields, headerColor = C.indigo) {
     'cd backend  && npm run dev    (port 5000)\ncd frontend && npm run dev    (port 5173)\nเปิด http://localhost:5173', C.amber, 11.5);
 }
 
+// บันทึกไฟล์ .pptx ไปที่ root ของโปรเจกต์ แล้วพิมพ์ CREATED: <path> เมื่อสำเร็จ
 pptx.writeFile({ fileName: path.join(__dirname, '..', '..', 'HR-System-Presentation.pptx') })
   .then((f) => console.log('CREATED:', f));

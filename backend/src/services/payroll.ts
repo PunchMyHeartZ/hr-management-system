@@ -1,6 +1,12 @@
+// ============================================================
+// บริการเงินเดือน — ดู payslip / คำนวณทั้งเดือน / ตั้งโบนัสรายปี
+// generateMonthlyPayroll รวบรวม OT (จาก attendance) + โบนัส (จาก bonuses)
+// แล้วเรียก payrollEngine คำนวณ ทั้งหมดใน transaction เดียว
+// ============================================================
 import type { PoolClient } from 'pg';
 import { pool, pgErrorCode } from '../db';
 import { ServiceError } from './errors';
+// เครื่องคำนวณสูตรไทย (SSO/ภาษี/OT) — pure functions ไม่แตะ DB
 import { computeMonthlyPayroll } from './payrollEngine';
 
 export interface PayrollRecord {
@@ -18,6 +24,7 @@ export interface PayrollRecord {
   net_pay: string;
 }
 
+/** template query ดู payslip — extraWhere ใช้เพิ่มเงื่อนไขกรองรายคน ($3 = scope) */
 const PAYROLL_SELECT = (extraWhere = '') => `
   SELECT  p.payroll_id,
           p.employee_id,
@@ -43,6 +50,7 @@ export interface BonusInput {
   amount: number;
 }
 
+/** ดู payslip ของเดือน — scope = รหัสพนักงาน (เห็นของตัวเอง), null = ทั้งบริษัท */
 export async function listPayslips(year: number, month: number, scope: number | null): Promise<PayrollRecord[]> {
   const { rows } = scope
     ? await pool.query<PayrollRecord>(PAYROLL_SELECT('AND p.employee_id = $3'), [year, month, scope])
@@ -50,6 +58,7 @@ export async function listPayslips(year: number, month: number, scope: number | 
   return rows;
 }
 
+/** รวมชั่วโมง OT ของพนักงาน 1 คน ในเดือนนั้น (work_date ตกในช่วงเดือน y/m) */
 async function monthlyOtHours(client: PoolClient, employeeId: number, year: number, month: number): Promise<number> {
   const { rows } = await client.query<{ ot: string }>(
     `SELECT COALESCE(SUM(ot_hours), 0) AS ot FROM attendance
@@ -61,6 +70,11 @@ async function monthlyOtHours(client: PoolClient, employeeId: number, year: numb
   return Number(rows[0]?.ot) || 0;
 }
 
+/**
+ * คำนวณเงินเดือนทั้งบริษัทสำหรับ 1 เดือน (เฉพาะพนักงาน status = 'active')
+ * ทุกคนอยู่ใน transaction เดียว: คนใดคนหนึ่งพัง → ROLLBACK ทั้งชุด ไม่มีครึ่งๆ กลางๆ
+ * ใช้ UPSERT (ON CONFLICT DO UPDATE) รองรับการกด generate ซ้ำเดือนเดิม
+ */
 export async function generateMonthlyPayroll(year: number, month: number): Promise<PayrollRecord[]> {
   const client = await pool.connect();
   try {
@@ -108,6 +122,7 @@ export async function generateMonthlyPayroll(year: number, month: number): Promi
   return listPayslips(year, month, null);
 }
 
+/** ตั้งโบนัสรายปี (UPSERT ทับปีเดิมได้) — โบนัสจะถูกหักภาษีตอน generate payroll เดือนที่จ่าย */
 export async function upsertBonus(input: BonusInput): Promise<{ bonus_id: number; employee_id: number; bonus_year: number; amount: string }> {
   try {
     const { rows } = await pool.query(

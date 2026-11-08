@@ -1,7 +1,13 @@
+// ============================================================
+// บริการระบบสมาชิก — สมัคร / ล็อกอิน / ดึงข้อมูลผู้ใช้
+// รหัสผ่านเข้ารหัสด้วย bcrypt ก่อนเก็บ และเทียบด้วย bcrypt.compare
+// (ไม่เก็บ plain-text และถอดรหัสกลับไม่ได้)
+// ============================================================
 import bcrypt from 'bcryptjs';
 import { pool, pgErrorCode } from '../db';
 import { ServiceError } from './errors';
 
+/** แถวตาราง users ตรงๆ ตามชื่อคอลัมน์ใน DB (รวม password_hash ที่ไม่ส่งออกให้ client) */
 interface UserRow {
   user_id: number;
   username: string;
@@ -29,6 +35,7 @@ export interface RegisterInput {
   role: 'hr' | 'executive';
 }
 
+/** แปลงแถว DB → ข้อมูลผู้ใช้ที่ปลอดภัยจะส่งให้ client (ตัด password_hash ทิ้ง) */
 function publicUser(u: UserRow): PublicUser {
   return {
     id: u.user_id,
@@ -40,6 +47,7 @@ function publicUser(u: UserRow): PublicUser {
   };
 }
 
+/** สมัครสมาชิกใหม่ — hash รหัสผ่าน (10 rounds) แล้วเก็บ, ชื่อ/อีเมลซ้ำโยน 409 */
 export async function registerUser(input: RegisterInput): Promise<PublicUser> {
   const hash = await bcrypt.hash(input.password, 10);
   try {
@@ -60,6 +68,7 @@ export async function registerUser(input: RegisterInput): Promise<PublicUser> {
   }
 }
 
+/** ล็อกอินด้วยอีเมลหรือ username — ข้อมูลไม่ตรงโยน 401 (รวมกรณีไม่มี user) */
 export async function loginWithPassword(identifier: string, password: string): Promise<PublicUser> {
   const { rows } = await pool.query<UserRow>(
     'SELECT * FROM users WHERE email = $1 OR LOWER(username) = $1',
@@ -72,6 +81,7 @@ export async function loginWithPassword(identifier: string, password: string): P
   return publicUser(user);
 }
 
+/** ดึงข้อมูลผู้ใช้ล่าสุดจาก DB (ใช้กับ GET /me — ไม่ไว้ใจเพียงข้อมูลใน token) */
 export async function findUserById(userId: number): Promise<PublicUser> {
   const { rows } = await pool.query<UserRow>(
     'SELECT user_id, username, email, full_name, role, employee_id FROM users WHERE user_id = $1',

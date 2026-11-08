@@ -1,3 +1,6 @@
+// ==============================
+// Dialog สลิปเงินเดือน (payslip) — แสดงรายละเอียดรายได้/หัก และปุ่มสั่งพิมพ์ (window.print)
+// ==============================
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -12,11 +15,17 @@ interface PayslipDialogProps {
   onClose: () => void;
 }
 
+/**
+ * Dialog สลิปเงินเดือน
+ * @param record รายการ payroll ที่เลือก (null = ปิด)
+ * @param employee ข้อมูลพนักงาน — ถ้าไม่ส่งจะดึงจาก API เองตาม record.employee_id
+ */
 export default function PayslipDialog({ record, employee, onClose }: PayslipDialogProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
   const [emp, setEmp] = useState<Employee | null>(employee ?? null);
 
+  // ส่วนดึงข้อมูล: โหลดข้อมูลพนักงานเพิ่มเติม (ตำแหน่ง/แผนก) เมื่อไม่ได้ส่ง employee มา
   useEffect(() => {
     if (employee || !record) {
       setEmp(employee ?? null);
@@ -36,6 +45,7 @@ export default function PayslipDialog({ record, employee, onClose }: PayslipDial
     };
   }, [record, employee]);
 
+  // รูปแบบงวดเป็น YYYY-MM และคำนวณยอดรวมก่อนหัก = เงินเดือน + OT + โบนัส
   const period = record
     ? `${record.pay_period_year}-${String(record.pay_period_month).padStart(2, '0')}`
     : '';
@@ -46,6 +56,7 @@ export default function PayslipDialog({ record, employee, onClose }: PayslipDial
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px]" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[min(92vw,34rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl bg-white p-0 shadow-xl focus:outline-none">
+          {/* ส่วนหัวสลิป: ชื่อระบบ + งวดจ่าย */}
           <div id="payslip-print" className="p-8 print:p-0">
             <div className="flex items-center justify-between border-b-2 border-slate-800 pb-4">
               <div>
@@ -57,6 +68,7 @@ export default function PayslipDialog({ record, employee, onClose }: PayslipDial
               </div>
             </div>
 
+            {/* ข้อมูลพนักงาน: ชื่อ, ตำแหน่ง, แผนก, ID */}
             <div className="grid grid-cols-2 gap-4 border-b border-slate-200 py-4 text-sm">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('payslip.employee')}</div>
@@ -76,6 +88,7 @@ export default function PayslipDialog({ record, employee, onClose }: PayslipDial
               </div>
             </div>
 
+            {/* รายการรายได้/หัก: เงินเดือน, OT, โบนัส, รวม, SSO, ภาษี, รับสุทธิ */}
             <div className="space-y-2 py-4 text-sm">
               <div className="flex justify-between text-slate-700">
                 <span>{t('payslip.baseSalary')}</span>
@@ -110,6 +123,7 @@ export default function PayslipDialog({ record, employee, onClose }: PayslipDial
             <p className="border-t border-slate-200 pt-3 text-[11px] text-slate-400">{t('payslip.note')}</p>
           </div>
 
+            {/* ปุ่มปิด/สั่งพิมพ์ (ซ่อนตอน print) */}
           <div className="flex justify-end gap-3 border-t border-slate-100 p-4 print:hidden">
             <Dialog.Close asChild>
               <button type="button" className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">

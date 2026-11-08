@@ -1,3 +1,7 @@
+// ============================================================
+// /api/auth — สมัครสมาชิก (register), ล็อกอิน (login), ข้อมูลตัวเอง (me)
+// register/login เป็นสาธารณะ (ไม่ต้องมี token), me ต้องล็อกอิน
+// ============================================================
 import express from 'express';
 import { z } from 'zod';
 import type { Request, Response } from 'express';

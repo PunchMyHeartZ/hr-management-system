@@ -1,3 +1,7 @@
+// ============================================================
+// /api/recruitment — การรับสมัครงาน: ตำแหน่ง (positions) + ผู้สมัคร (applicants)
+// ทุก endpoint เป็นสิทธิ์ HR/ผู้บริหาร (ข้อมูลสรรหาบุคลากรไม่เปิดให้พนักงานทั่วไป)
+// ============================================================
 import express from 'express';
 import { z } from 'zod';
 import type { Request, Response } from 'express';

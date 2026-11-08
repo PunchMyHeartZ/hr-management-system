@@ -1,3 +1,6 @@
+// ==============================
+// โครงสร้างหลักของแอป — สลับหน้าจอตาม role (HR/Executive ใช้ HRApp, พนักงานใช้ EmployeeApp)
+// ==============================
 import * as Tabs from '@radix-ui/react-tabs';
 import AppLayout from './components/AppLayout';
 import DashboardPage from './pages/DashboardPage';
@@ -16,6 +19,7 @@ import { useAuth } from './context/AuthContext';
 import { NavProvider, useNav } from './context/NavContext';
 import type { TabValue } from './context/NavContext';
 
+/** แอปหลักสำหรับ HR/Executive — แสดง tab ครบทุกหน้า (เพิ่มหน้า Executive Insights เมื่อเป็น executive) */
 function HRApp({ isExecutive }: { isExecutive: boolean }) {
   const { tab, goTab } = useNav();
   return (
@@ -61,6 +65,7 @@ function HRApp({ isExecutive }: { isExecutive: boolean }) {
   );
 }
 
+/** แอปสำหรับพนักงานทั่วไป — เห็นเฉพาะ 3 หน้า: โปรไฟล์ตัวเอง, การลาของตัวเอง, สลิปเงินเดือน */
 function EmployeeApp() {
   const { tab, goTab } = useNav();
   const { user } = useAuth();
@@ -81,14 +86,17 @@ function EmployeeApp() {
   );
 }
 
+/** tab โปรไฟล์ของ HR — แสดงโปรไฟล์พนักงานคนล่าสุดที่เลือกผ่าน openProfile */
 function ProfileTab() {
   const { profileEmployeeId } = useNav();
   return <EmployeeProfilePage employeeId={profileEmployeeId} />;
 }
 
+/** คอมโพเนนต์รากของแอป — จัดการสถานะ booting, หน้า login และเลือกแอปตาม role ของผู้ใช้ */
 export default function App() {
   const { user, booting } = useAuth();
 
+  // ส่วนขณะกำลังตรวจสอบ token ตอนเปิดแอป (แสดง spinner)
   if (booting) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -99,10 +107,12 @@ export default function App() {
 
   if (!user) return <AuthPage />;
 
+  // กำหนด tab เริ่มต้น: พนักงานเริ่มที่โปรไฟล์ ส่วน HR/Executive เริ่มที่ dashboard
   const defaultTab: TabValue = user.role === 'employee' ? 'profile' : 'dashboard';
 
   return (
     <NavProvider defaultTab={defaultTab}>
+      {/* เลือกโครงแอปตาม role ของผู้ใช้ */}
       {user.role === 'employee' ? (
         <EmployeeApp />
       ) : (

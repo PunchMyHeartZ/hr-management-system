@@ -1,6 +1,10 @@
+// ==============================
+// NavContext — จัดการ tab ปัจจุบัน (navigation) และการเปิดโปรไฟล์พนักงานจากหน้าอื่น
+// ==============================
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
+// ค่า tab ทั้งหมดที่ใช้ในแอป (แยกตาม role: HR/Employee)
 export type TabValue =
   | 'dashboard'
   | 'employees'
@@ -25,12 +29,14 @@ interface NavContextValue {
 
 const NavContext = createContext<NavContextValue | null>(null);
 
+/** Provider ของ navigation — เก็บ tab ปัจจุบัน (defaultTab) และ id พนักงานที่เปิดโปรไฟล์ล่าสุด */
 export function NavProvider({ children, defaultTab }: { children: ReactNode; defaultTab: TabValue }) {
   const [tab, setTab] = useState<TabValue>(defaultTab);
   const [profileEmployeeId, setProfileEmployeeId] = useState<number | null>(null);
 
   const goTab = useCallback((next: TabValue) => setTab(next), []);
 
+  // เปิดโปรไฟล์พนักงาน: จำ id ไว้แล้วสลับไป tab โปรไฟล์ทันที
   const openProfile = useCallback((employeeId: number) => {
     setProfileEmployeeId(employeeId);
     setTab('profile');
@@ -44,6 +50,7 @@ export function NavProvider({ children, defaultTab }: { children: ReactNode; def
   return <NavContext.Provider value={value}>{children}</NavContext.Provider>;
 }
 
+/** hook เข้าถึงสถานะ navigation — ต้องใช้ภายใน NavProvider เท่านั้น */
 export function useNav(): NavContextValue {
   const ctx = useContext(NavContext);
   if (!ctx) throw new Error('useNav must be used within NavProvider');

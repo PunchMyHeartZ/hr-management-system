@@ -1,3 +1,6 @@
+// ==============================
+// หน้า dashboard ของ HR — KPI 4 ตัว, กราฟการลา/เงินเดือน (recharts) และการ์ดประกาศ
+// ==============================
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,8 +15,10 @@ import { formatMoney } from '../lib/format';
 import { SkeletonCards, SkeletonCharts } from '../components/Skeleton';
 import AnnouncementsCard from '../components/AnnouncementsCard';
 
+// ชุดสีของแต่ละ slice ใน pie chart
 const PIE_COLORS = ['#0B57D0', '#38BDF8', '#0284C7', '#4F46E5'];
 
+/** การ์ดคอนเทนเนอร์ของกราฟ — หัวเรื่อง + เนื้อหา (chart) */
 function ChartCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="card-lift rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -23,6 +28,7 @@ function ChartCard({ title, children }: { title: string; children: ReactNode }) 
   );
 }
 
+/** หน้า dashboard — โหลดสถิติจาก /stats/dashboard แล้วแสดง KPI + กราฟ 4 ใบ + ประกาศ */
 export default function DashboardPage() {
   const { t, i18n } = useTranslation();
   const [data, setData] = useState<DashboardStats | null>(null);
@@ -30,6 +36,7 @@ export default function DashboardPage() {
 
   const locale = i18n.language === 'th' ? 'th-TH' : 'en-US';
 
+  // ส่วนดึงข้อมูลสถิติ
   useEffect(() => {
     api.getDashboard().then(setData).catch((e: Error) => setError(e.message));
   }, []);
@@ -50,14 +57,17 @@ export default function DashboardPage() {
     );
   }
 
+  // แปลง "YYYY-MM" เป็นป้ายเดือนสั้น เช่น "ม.ค. 68"
   const monthLabel = (m: ReactNode): string => {
     if (!m) return '-';
     const [y, mm] = String(m).split('-').map(Number);
     return new Date(y, mm - 1, 1).toLocaleDateString(locale, { month: 'short', year: '2-digit' });
   };
+  // ย่อตัวเลขเงินเป็นหลักพัน เช่น 45000 -> "45k"
   const kFormat = (v: unknown) => `${Math.round(Number(v) / 1000)}k`;
   const moneyTooltip = (value: unknown): [string, string] => [formatMoney(Number(value), locale), ''];
 
+  // ข้อมูล KPI 4 การ์ด: จำนวนพนักงาน, ใบลารออนุมัติ, ยอดจ่ายล่าสุด, ชั่วโมง OT
   const kpis: { icon: ReactNode; bg: string; label: string; value: ReactNode; sub: string }[] = [
     {
       icon: <Users className="h-5 w-5 text-azure-600" />,
@@ -89,15 +99,18 @@ export default function DashboardPage() {
     },
   ];
 
+  // ข้อมูล pie chart การลาแยกตามประเภท (แปล label ด้วย i18n)
   const pieData = data.leavesByType.map((x) => ({ ...x, label: t(`leaves.types.${x.type}`) }));
 
   return (
     <section>
+      {/* ส่วนหัวหน้า */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-slate-900">{t('dashboard.title')}</h2>
         <p className="text-sm text-slate-500">{t('dashboard.subtitle')}</p>
       </div>
 
+      {/* ส่วนการ์ด KPI */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((k) => (
           <div key={k.label} className="card-lift rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -111,11 +124,13 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* ส่วนกราฟ: ประกาศ, การลารายเดือน, การลาตามประเภท, เงินเดือนรายเดือน, เงินเดือนตามแผนก */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6 lg:col-span-2">
           <AnnouncementsCard />
         </div>
 
+        {/* กราฟแท่ง: จำนวนวัน/คำขอลารายเดือน */}
         <ChartCard title={t('dashboard.leavesByMonth')}>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -136,6 +151,7 @@ export default function DashboardPage() {
           </div>
         </ChartCard>
 
+        {/* โดนัทชาร์ต: การลาแยกตามประเภท */}
         <ChartCard title={t('dashboard.leavesByType')}>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -161,6 +177,7 @@ export default function DashboardPage() {
           </div>
         </ChartCard>
 
+        {/* กราฟแท่งซ้อน: ยอด net/SSO/ภาษี รายเดือน */}
         <ChartCard title={t('dashboard.payrollByMonth')}>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -178,6 +195,7 @@ export default function DashboardPage() {
           </div>
         </ChartCard>
 
+        {/* กราฟแท่งแนวนอน: ยอดจ่ายสุทธิแยกตามแผนก */}
         <ChartCard title={t('dashboard.payrollByDepartment')}>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">

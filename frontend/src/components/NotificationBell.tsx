@@ -1,3 +1,6 @@
+// ==============================
+// กระดิ่งแจ้งเตือน — แสดงจำนวนใบลารออนุมัติและประกาศล่าสุด (โหลดใหม่ทุก 60 วินาที)
+// ==============================
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, CalendarClock, Megaphone } from 'lucide-react';
@@ -6,6 +9,7 @@ import type { Announcement } from '../api/schemas';
 import { useAuth } from '../context/AuthContext';
 import { useNav } from '../context/NavContext';
 
+/** กระดิ่งแจ้งเตือน — badge รวม (ใบลา pending + ประกาศใหม่) และ dropdown คลิกเพื่อกระโดดไปหน้าที่เกี่ยวข้อง */
 export default function NotificationBell() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -15,8 +19,10 @@ export default function NotificationBell() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const boxRef = useRef<HTMLDivElement>(null);
 
+  // เฉพาะ HR/Executive เท่านั้นที่เห็นตัวเลขใบลารออนุมัติ
   const isApprover = user?.role === 'hr' || user?.role === 'executive';
 
+  // ส่วนดึงข้อมูล: โหลดใบลา pending (เฉพาะ approver) และประกาศ โดยรีเฟรชทุก 60 วินาที
   useEffect(() => {
     const load = () => {
       if (isApprover) {
@@ -32,6 +38,7 @@ export default function NotificationBell() {
     return () => clearInterval(interval);
   }, [isApprover]);
 
+  // ปิด dropdown เมื่อคลิกนอกกล่อง (click-outside)
   useEffect(() => {
     const onClickAway = (e: MouseEvent) => {
       if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
@@ -41,10 +48,12 @@ export default function NotificationBell() {
   }, []);
 
   const latest = announcements.slice(0, 3);
+  // ตัวเลขรวมบน badge = ใบลา pending + ประกาศ 3 รายการล่าสุด
   const badge = pendingCount + latest.length;
 
   return (
     <div ref={boxRef} className="relative">
+      {/* ปุ่มกระดิ่งพร้อม badge แสดงจำนวน (เกิน 9 แสดง "9+") */}
       <button
         type="button"
         aria-label={t('notifications.title')}
@@ -59,12 +68,14 @@ export default function NotificationBell() {
         )}
       </button>
 
+      {/* ส่วน dropdown รายการแจ้งเตือน */}
       {open && (
         <div className="panel-in absolute right-0 top-11 z-50 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
           <div className="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-900">
             {t('notifications.title')}
           </div>
           <div className="max-h-80 divide-y divide-slate-50 overflow-y-auto">
+            {/* แถวใบลารออนุมัติ (เฉพาะ approver) — คลิกไปหน้าการลา */}
             {isApprover && (
               <button
                 type="button"
@@ -89,6 +100,7 @@ export default function NotificationBell() {
                 </span>
               </button>
             )}
+            {/* รายการประกาศล่าสุด — คลิกไปหน้า dashboard */}
             {latest.map((a) => (
               <button
                 key={a.announcement_id}
