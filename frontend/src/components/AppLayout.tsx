@@ -1,3 +1,6 @@
+// ==============================
+// โครงหน้าจอหลัก (layout) — sidebar นำทาง + พื้นที่เนื้อหา แยกเมนูตาม role (HR/Executive/พนักงาน)
+// ==============================
 import { useTranslation } from 'react-i18next';
 import * as Tabs from '@radix-ui/react-tabs';
 import { LayoutDashboard, Users, CalendarDays, Clock3, Wallet, LogOut, Crown, ShieldCheck, BarChart3, CalendarRange, Building2, Target, UserPlus, UserCircle, FileText } from 'lucide-react';
@@ -13,6 +16,7 @@ interface NavItem {
   labelKey: string;
 }
 
+// เมนูของ HR (executive จะได้รายการนี้ + EXEC_NAV เพิ่ม)
 const HR_NAV: NavItem[] = [
   { value: 'dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard' },
   { value: 'employees', icon: Users, labelKey: 'nav.employees' },
@@ -25,19 +29,23 @@ const HR_NAV: NavItem[] = [
   { value: 'recruitment', icon: UserPlus, labelKey: 'nav.recruitment' },
 ];
 
+// เมนูพิเศษสำหรับ executive (Executive Insights)
 const EXEC_NAV: NavItem = { value: 'execinsights', icon: BarChart3, labelKey: 'nav.executive' };
 
+// เมนูของพนักงานทั่วไป (โปรไฟล์/การลา/สลิปเงินเดือนของตัวเอง)
 const EMPLOYEE_NAV: NavItem[] = [
   { value: 'profile', icon: UserCircle, labelKey: 'nav.myProfile' },
   { value: 'myleaves', icon: CalendarDays, labelKey: 'nav.myLeaves' },
   { value: 'mypayslips', icon: FileText, labelKey: 'nav.myPayslips' },
 ];
 
+/** Layout หลักของแอป — แสดง sidebar (โลโก้, เมนูตาม role, ข้อมูลผู้ใช้) และ main content */
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const isHR = user?.role === 'hr';
   const isEmployee = user?.role === 'employee';
+  // เลือกชุดเมนู: พนักงาน > EMPLOYEE_NAV, executive > HR_NAV+EXEC_NAV, ไม่งั้น > HR_NAV
   const NAV = isEmployee
     ? EMPLOYEE_NAV
     : user?.role === 'executive'
@@ -46,10 +54,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-[#F3F8FE] to-blue-50">
-      <aside className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-md lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:border-b-0 lg:border-r">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-5 lg:py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-azure-600 text-sm font-bold text-white">
+      {/* ส่วน sidebar: เปลี่ยนเป็นแถบบน (mobile) และคงที่ด้านซ้าย (desktop) */}
+      <aside className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur-md lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-56 lg:flex-col lg:border-b-0 lg:border-r">
+        {/* โลโก้ + ปุ่ม utility บน mobile */}
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-4 lg:py-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-azure-600 text-xs font-bold text-white">
               HR
             </div>
             <div className="leading-tight">
@@ -71,12 +81,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <Tabs.List className="flex gap-1 overflow-x-auto border-t border-slate-100 px-3 py-2 lg:flex-1 lg:flex-col lg:overflow-visible lg:border-t-0 lg:px-3 lg:py-3">
+        {/* ส่วนเมนูนำทาง (Tabs.List) แนวนอนบน mobile / แนวตั้งบน desktop */}
+        <Tabs.List className="flex gap-1 overflow-x-auto border-t border-slate-100 px-3 py-1.5 lg:flex-1 lg:flex-col lg:overflow-visible lg:border-t-0 lg:px-2.5 lg:py-2">
           {NAV.map(({ value, icon: Icon, labelKey }) => (
             <Tabs.Trigger
               key={value}
               value={value}
-              className="flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-azure-50 hover:text-azure-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-400 data-[state=active]:to-azure-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-azure-600/30"
+              className="flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-azure-50 hover:text-azure-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-400 data-[state=active]:to-azure-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-azure-600/30"
             >
               <Icon className="h-4 w-4 shrink-0" />
               {t(labelKey)}
@@ -84,14 +95,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           ))}
         </Tabs.List>
 
-        <div className="hidden border-t border-slate-100 p-4 lg:block">
-          <div className="mb-3 flex items-center justify-between gap-2">
+        {/* ส่วนการ์ดผู้ใช้ (desktop เท่านั้น): กระดิ่งแจ้งเตือน, สลับภาษา, ชื่อ+role, ปุ่มออกจากระบบ */}
+        <div className="hidden border-t border-slate-100 p-3 lg:block">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <NotificationBell />
             <LanguageSwitcher />
           </div>
-          <div className="rounded-xl bg-slate-50 p-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-azure-100 text-sm font-bold text-azure-700">
+          <div className="rounded-xl bg-slate-50 p-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-azure-100 text-xs font-bold text-azure-700">
                 {user?.full_name?.charAt(0).toUpperCase() ?? '?'}
               </div>
               <div className="min-w-0 flex-1 leading-tight">
@@ -109,7 +121,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={logout}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
             >
               <LogOut className="h-4 w-4" />
               {t('auth.logout')}
@@ -118,7 +130,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="px-4 py-6 sm:px-6 lg:py-8 lg:pl-72 lg:pr-8">{children}</main>
+      {/* พื้นที่เนื้อหาหลัก (เว้นซ้ายให้ sidebar บน desktop) */}
+      <main className="px-4 py-6 sm:px-6 lg:py-8 lg:pl-64 lg:pr-8">{children}</main>
     </div>
   );
 }
